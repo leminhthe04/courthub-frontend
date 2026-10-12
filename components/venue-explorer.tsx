@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useVenues } from '../hooks';
+import { useCategories, useVenues } from '../hooks';
 import { Link } from '../lib/i18n/routing';
 
 export function VenueExplorer() {
@@ -14,6 +14,7 @@ export function VenueExplorer() {
   const [sportType, setSportType] = useState('');
   const [submitted, setSubmitted] = useState({ search: '', city: '', sportType: '' });
 
+  const { data: categories } = useCategories();
   const venues = useVenues(submitted);
 
   return (
@@ -56,11 +57,11 @@ export function VenueExplorer() {
           className="border border-slate-200 bg-white px-4 py-3 outline-none focus:border-emerald-500"
         >
           <option value="">{t('allSports')}</option>
-          <option value="Badminton">{t('sports.BADMINTON')}</option>
-          <option value="Pickleball">{t('sports.PICKLEBALL')}</option>
-          <option value="Football">{t('sports.FOOTBALL')}</option>
-          <option value="Tennis">{t('sports.TENNIS')}</option>
-          <option value="Basketball">{t('sports.BASKETBALL')}</option>
+          {categories?.map((cat) => (
+            <option key={cat.id} value={cat.name}>
+              {cat.name}
+            </option>
+          ))}
         </select>
         <button
           type="submit"

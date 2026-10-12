@@ -1,21 +1,40 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useLogin, useRegister } from '../hooks';
+import { useCurrentUser, useLogin, useRegister } from '../hooks';
 import { getLocalizedErrorMessage } from '../lib/formatters';
 import { Link, useRouter } from '../lib/i18n/routing';
+import { Role } from '@/lib/types';
 
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="mt-1 text-xs text-rose-600">{message}</p> : null;
 }
 
+const RouteMap: Map<Role, string> = new Map([
+  ['PARTNER', '/partner'],
+  ['ADMIN', '/admin'],
+  ['CUSTOMER', '/'],
+]);
+
 export function LoginForm() {
   const t = useTranslations('auth');
   const tErrors = useTranslations('errors');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
+  const { user, isLoading } = useCurrentUser();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      const destination = redirectUrl || RouteMap.get(user.role) || '/';
+      router.replace(destination);
+    }
+  }, [user, isLoading, router, redirectUrl]);
 
   const loginSchema = z.object({
     identifier: z.string().min(3, t('validation.identifierRequired')),
@@ -28,8 +47,9 @@ export function LoginForm() {
   });
 
   const mutation = useLogin({
-    onSuccess: () => {
-      router.push('/');
+    onSuccess: (result) => {
+      const destination = redirectUrl || RouteMap.get(result.user.role) || '/';
+      router.push(destination);
       router.refresh();
     },
   });
