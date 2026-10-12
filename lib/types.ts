@@ -67,34 +67,28 @@ export type Court = {
   isActive: boolean;
 };
 
+export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
+
 export type VenuePricingRule = {
   id: string;
   venueId: string;
+  dayOfWeek: DayOfWeek;
   startTime: string;
   endTime: string;
   hourlyRate: number;
 };
 
 export type CreateVenuePricingRuleDto = {
+  dayOfWeek: DayOfWeek;
   startTime: string;
   endTime: string;
   hourlyRate: number;
-};
-
-export type OperatingHours = {
-  id: string;
-  venueId: string;
-  dayOfWeek: number;
-  openTime: string | null;
-  closeTime: string | null;
-  isClosed: boolean;
 };
 
 export type VenueDetail = VenueSummary & {
   ownerId: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   courts: Court[];
-  operatingHours: OperatingHours[];
   pricingRules?: VenuePricingRule[];
 };
 
@@ -111,7 +105,6 @@ export type ScheduleResponse = {
   date: string;
   timezone: string;
   slotMinutes: 30;
-  hours: OperatingHours | null;
   courts: (Court & { bookings: ScheduleBooking[] })[];
 };
 

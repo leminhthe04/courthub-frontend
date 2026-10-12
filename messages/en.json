@@ -83,6 +83,7 @@
     }
   },
   "booking": {
+    "savedSelectionUnavailable": "Your saved time slot is no longer available. Please choose another slot.",
     "title": "Book Court",
     "selectDate": "Select Date",
     "selectCourtAndSlot": "Select Court & Time Slot",
@@ -91,7 +92,7 @@
     "contactInfo": "Contact Information",
     "guestName": "Full Name",
     "guestNamePlaceholder": "Your name",
-    "contactPhone": "Phone Number for Confirmation",
+    "contactPhone": "Phone Number",
     "contactPhonePlaceholder": "+84...",
     "note": "Special Note",
     "notePlaceholder": "Racket rental, ball requirements...",
@@ -106,9 +107,28 @@
     "bookAnother": "Book Another Slot",
     "promptSelectSlot": "Please click a slot on the schedule grid before submitting.",
     "timeRange": "{start} - {end}",
-    "ratePerHour": "{rate}/hour"
+    "ratePerHour": "{rate}/hour",
+    "minutes": "min",
+    "proceedToBooking": "Proceed to Booking",
+    "loginToContinue": "Log in to continue",
+    "continueAsGuest": "Continue as guest",
+    "modalTitle": "Log in to continue booking?",
+    "modalSubtitle": "Log in to easily manage bookings, save contact details, and receive perks, or continue quickly as a guest.",
+    "checkoutTitle": "Checkout & Confirmation",
+    "checkoutSubtitle": "Review your booking details and complete reservation.",
+    "backToSchedule": "Back to schedule",
+    "orderSummary": "Booking Summary",
+    "court": "Court",
+    "time": "Time",
+    "noBookingInfo": "No booking information found",
+    "noBookingInfoDesc": "Please return to the venue details page to choose a court and time slot.",
+    "backToVenues": "Back to venues",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginNow": "Log in now",
+    "loggedInAs": "Booking with account"
   },
   "schedule": {
+    "noPricingRule": "Unavailable: no price configured",
     "legend": "Status legend:",
     "available": "Available",
     "booked": "Booked",
@@ -116,7 +136,8 @@
     "selected": "Selected",
     "closed": "Closed",
     "operatingHours": "Operating hours: {open} - {close}",
-    "noOperatingHours": "No operating hours set for this date."
+    "noOperatingHours": "No operating hours set for this date.",
+    "today": "Today"
   },
   "customerDashboard": {
     "title": "My Bookings",
@@ -197,7 +218,6 @@
     "manageTitle": "Manage Venue",
     "manageSubtitle": "Manage courts, update pricing rates, and operational availability for your venue.",
     "pricingRulesTitle": "Unified Venue Pricing Rules",
-    "pricingRulesSubtitle": "All courts in this venue share unified pricing based on these time slots.",
     "addPricingRule": "Add Pricing Slot",
     "addingPricingRule": "Adding...",
     "startTime": "Start Time",
@@ -208,10 +228,32 @@
     "deletePricingRule": "Delete",
     "appliesVenuePricing": "Applies venue unified pricing",
     "pricingNotice": "All courts in this venue share this time-based pricing schedule.",
-    "selectCategoryPlaceholder": "Select a sport category...",
+    "selectCategoryPlaceholder": "Select a category...",
     "tabCourts": "Courts",
     "tabPricing": "Pricing Slots",
-    "pricingSlotsCount": "Pricing Slots"
+    "pricingSlotsCount": "Pricing Slots",
+    "tabOverview": "Overview",
+    "overviewTitle": "Booking Schedule Overview",
+    "overviewDate": "Schedule date:",
+    "courtCreated": "Court created successfully!",
+    "courtUpdated": "Court updated successfully!",
+    "pricingRuleCreated": "Pricing slot added successfully!",
+    "pricingRuleDeleted": "Pricing slot deleted successfully!",
+    "pricingRulesSaved": "Weekly pricing saved successfully!",
+    "savingPricingRules": "Saving...",
+    "savePricingRules": "Save weekly pricing",
+    "applyToDays": "Apply to days",
+    "copyFrom": "Copy from",
+    "copyToSelectedDays": "Copy to selected days",
+    "days": {
+      "MON": "Monday",
+      "TUE": "Tuesday",
+      "WED": "Wednesday",
+      "THU": "Thursday",
+      "FRI": "Friday",
+      "SAT": "Saturday",
+      "SUN": "Sunday"
+    }
   },
   "adminDashboard": {
     "title": "Administration",
@@ -248,6 +290,7 @@
   },
   "errors": {
     "default": "An error occurred, please try again later.",
+    "HTTP_400": "The submitted data is invalid.",
     "CATEGORY_NOT_FOUND": "Sport category not found.",
     "CATEGORY_SLUG_ALREADY_EXISTS": "A sport category with this slug already exists.",
     "CATEGORY_IN_USE": "Cannot edit or delete sport category because it is assigned to existing venues.",

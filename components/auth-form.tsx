@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -24,13 +25,16 @@ export function LoginForm() {
   const t = useTranslations('auth');
   const tErrors = useTranslations('errors');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
   const { user, isLoading } = useCurrentUser();
 
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace(RouteMap.get(user.role) || '/');
+      const destination = redirectUrl || RouteMap.get(user.role) || '/';
+      router.replace(destination);
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, redirectUrl]);
 
   const loginSchema = z.object({
     identifier: z.string().min(3, t('validation.identifierRequired')),
@@ -44,7 +48,8 @@ export function LoginForm() {
 
   const mutation = useLogin({
     onSuccess: (result) => {
-      router.push(RouteMap.get(result.user.role) || '/');
+      const destination = redirectUrl || RouteMap.get(result.user.role) || '/';
+      router.push(destination);
       router.refresh();
     },
   });
