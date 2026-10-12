@@ -1,6 +1,8 @@
 'use client';
 
+import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
+import { formatCurrency } from '../lib/formatters';
 import type { ScheduleResponse } from '../lib/types';
 
 type Slot = { label: string; startMinutes: number; endMinutes: number };
@@ -32,6 +34,10 @@ export function ScheduleGrid({
     durationMinutes: number;
   }) => void;
 }) {
+  const locale = useLocale();
+  const t = useTranslations('schedule');
+  const tBooking = useTranslations('booking');
+
   const [drag, setDrag] = useState<DragState | null>(null);
   const [warning, setWarning] = useState('');
   const startMinutes = toMinutes(schedule.hours?.openTime, 6 * 60);
@@ -64,7 +70,11 @@ export function ScheduleGrid({
     const blocked = selectedSlots.some((slot) => isBooked(drag.courtId, slot));
     setDrag(null);
     if (blocked) {
-      setWarning('Khoảng bạn chọn đã có slot được đặt. Hãy chọn vùng trống khác.');
+      setWarning(
+        locale === 'vi'
+          ? 'Khoảng bạn chọn đã có ô được đặt. Hãy chọn vùng trống khác.'
+          : 'Selected range contains already booked slots. Please choose available slots.',
+      );
       return;
     }
     setWarning('');
@@ -80,9 +90,7 @@ export function ScheduleGrid({
 
   if (schedule.hours?.isClosed) {
     return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
-        Venue đóng cửa vào ngày này.
-      </div>
+      <div className="border border-amber-200 bg-amber-50 p-6 text-amber-900">{t('closed')}</div>
     );
   }
 
@@ -90,22 +98,20 @@ export function ScheduleGrid({
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-500">
         <span className="inline-flex items-center gap-2">
-          <i className="h-3 w-3 rounded bg-emerald-100 ring-1 ring-emerald-300" /> Có thể đặt
+          <i className="h-3 w-3 bg-emerald-100 ring-1 ring-emerald-300" /> {t('available')}
         </span>
         <span className="inline-flex items-center gap-2">
-          <i className="h-3 w-3 rounded bg-slate-300" /> Đã có người đặt
+          <i className="h-3 w-3 bg-slate-300" /> {t('booked')}
         </span>
         <span className="inline-flex items-center gap-2">
-          <i className="h-3 w-3 rounded bg-blue-500" /> Lựa chọn của bạn
+          <i className="h-3 w-3 bg-blue-500" /> {t('selected')}
         </span>
       </div>
       {warning && (
-        <p className="mb-3 rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-          {warning}
-        </p>
+        <p className="mb-3 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{warning}</p>
       )}
       <div
-        className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
+        className="overflow-x-auto border border-slate-200 bg-white shadow-sm"
         onPointerUp={completeSelection}
       >
         <div
@@ -116,7 +122,7 @@ export function ScheduleGrid({
           }}
         >
           <div className="sticky left-0 z-20 border-b border-r border-slate-200 bg-white p-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-            Sân
+            {locale === 'vi' ? 'Sân' : 'Court'}
           </div>
           {slots.map((slot) => (
             <div
@@ -132,7 +138,9 @@ export function ScheduleGrid({
                 <div>
                   <p className="font-bold text-slate-900">{court.name}</p>
                   <p className="text-xs text-slate-500">
-                    {court.hourlyRate.toLocaleString('vi-VN')}đ/giờ
+                    {tBooking('ratePerHour', {
+                      rate: formatCurrency(court.hourlyRate, locale).replace(/[đ\sVND]/g, ''),
+                    })}
                   </p>
                 </div>
               </div>
@@ -157,7 +165,7 @@ export function ScheduleGrid({
                       if (drag?.courtId === court.id && !booked)
                         setDrag({ ...drag, endIndex: index });
                     }}
-                    className={`min-h-16 border-b border-r border-slate-100 transition ${booked ? 'cursor-not-allowed bg-slate-300' : selected ? 'bg-blue-500' : 'bg-emerald-50 hover:bg-emerald-200'}`}
+                    className={`min-h-16 border-b border-r border-slate-100 transition ${booked ? 'cursor-not-allowed bg-slate-300' : selected ? 'bg-blue-500' : 'cursor-pointer bg-emerald-50 hover:bg-emerald-200'}`}
                   />
                 );
               })}
@@ -166,8 +174,9 @@ export function ScheduleGrid({
         </div>
       </div>
       <p className="mt-3 text-xs text-slate-500">
-        Giữ chuột và kéo ngang trên một hàng sân để chọn khoảng thời gian liên tục. Mỗi ô tương ứng
-        30 phút.
+        {locale === 'vi'
+          ? 'Kéo ngang trên một hàng sân để chọn khoảng thời gian mong muốn (mỗi ô là 30 phút).'
+          : 'Click and drag across a row to select continuous slots (30 minutes each).'}
       </p>
     </div>
   );

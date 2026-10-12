@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"*.{json,md,yml,yaml}\"",
-    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"*.{json,md,yml,yaml}\"",
+    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"hooks/**/*.{ts,tsx}\" \"*.{json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"hooks/**/*.{ts,tsx}\" \"*.{json,md,yml,yaml}\"",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -23,7 +23,9 @@
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
     "@tanstack/react-query": "^5.66.8",
+    "axios": "^1.20.0",
     "next": "16.3.6",
+    "next-intl": "^4.14.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-hook-form": "^7.54.2",

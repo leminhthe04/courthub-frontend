@@ -12,8 +12,6 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    env:
-      NEXT_PUBLIC_API_URL: https://example.invalid/api
 
     steps:
       - name: Checkout
