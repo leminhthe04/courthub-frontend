@@ -12,6 +12,46 @@ function todayVietnam() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
 }
 
+function calculateBookingPrice(
+  startAt: string,
+  endAt: string,
+  pricingRules?: import('../lib/types').VenuePricingRule[],
+): number {
+  if (!pricingRules || pricingRules.length === 0) return 0;
+  const start = new Date(startAt);
+  const end = new Date(endAt);
+  const durationMinutes = (end.getTime() - start.getTime()) / 60000;
+  if (durationMinutes <= 0) return 0;
+
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(start);
+  const startH = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
+  const startM = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  const startMinutes = startH * 60 + startM;
+
+  const slotCount = Math.round(durationMinutes / 30);
+  let totalCost = 0;
+  for (let i = 0; i < slotCount; i++) {
+    const slotStart = startMinutes + i * 30;
+    const slotEnd = slotStart + 30;
+    const rule = pricingRules.find((r) => {
+      const [sh, sm] = r.startTime.slice(0, 5).split(':').map(Number);
+      const [eh, em] = r.endTime.slice(0, 5).split(':').map(Number);
+      const rStart = sh * 60 + sm;
+      const rEnd = eh * 60 + em;
+      return rStart <= slotStart && slotEnd <= rEnd;
+    });
+    if (rule) {
+      totalCost += Number(rule.hourlyRate) * 0.5;
+    }
+  }
+  return totalCost;
+}
+
 export function VenueBooking({ venueId }: { venueId: string }) {
   const locale = useLocale();
   const t = useTranslations('booking');
@@ -38,8 +78,11 @@ export function VenueBooking({ venueId }: { venueId: string }) {
     () => schedule.data?.courts.find((court) => court.id === selection?.courtId),
     [schedule.data, selection],
   );
-  const total =
-    selectedCourt && selection ? (selectedCourt.hourlyRate * selection.durationMinutes) / 60 : 0;
+  const total = useMemo(() => {
+    if (!selection) return 0;
+    const rules = venue.data?.pricingRules ?? schedule.data?.venue.pricingRules;
+    return calculateBookingPrice(selection.startAt, selection.endAt, rules);
+  }, [selection, venue.data?.pricingRules, schedule.data?.venue.pricingRules]);
 
   const createBooking = useCreateBooking({
     onSuccess: (result) => {

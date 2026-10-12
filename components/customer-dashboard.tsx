@@ -1,21 +1,30 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCancelBooking, useCurrentUser, useMyBookings } from '../hooks';
 import { formatCurrency, formatDateTime, getLocalizedErrorMessage } from '../lib/formatters';
-import { Link } from '../lib/i18n/routing';
+import { Link, useRouter } from '../lib/i18n/routing';
 
 export function CustomerDashboard() {
   const locale = useLocale();
   const t = useTranslations('customerDashboard');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
+  const router = useRouter();
 
   const me = useCurrentUser();
-  const bookings = useMyBookings(Boolean(me.user));
+  const isCustomer = me.user?.role === 'CUSTOMER';
+  const bookings = useMyBookings(Boolean(me.user && isCustomer));
   const cancel = useCancelBooking();
 
-  if (me.isLoading) {
+  useEffect(() => {
+    if (!me.isLoading && me.user?.role === 'PARTNER') {
+      router.replace('/partner');
+    }
+  }, [me.user, me.isLoading, router]);
+
+  if (me.isLoading || me.user?.role === 'PARTNER') {
     return <div className="mx-auto max-w-7xl px-5 py-16 text-slate-500">{tCommon('loading')}</div>;
   }
 

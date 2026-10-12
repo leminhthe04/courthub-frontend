@@ -36,7 +36,6 @@ export function ScheduleGrid({
 }) {
   const locale = useLocale();
   const t = useTranslations('schedule');
-  const tBooking = useTranslations('booking');
 
   const [drag, setDrag] = useState<DragState | null>(null);
   const [warning, setWarning] = useState('');
@@ -110,6 +109,24 @@ export function ScheduleGrid({
       {warning && (
         <p className="mb-3 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{warning}</p>
       )}
+      {schedule.venue.pricingRules && schedule.venue.pricingRules.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-xs">
+          <span className="font-bold text-slate-700">
+            {locale === 'vi' ? 'Bảng giá theo giờ:' : 'Hourly Pricing:'}
+          </span>
+          {schedule.venue.pricingRules.map((rule) => (
+            <span
+              key={rule.id}
+              className="inline-flex items-center gap-1 rounded bg-white px-2 py-0.5 font-medium text-slate-800 shadow-xs border border-slate-200"
+            >
+              <span className="font-bold text-emerald-700">
+                {rule.startTime.slice(0, 5)} - {rule.endTime.slice(0, 5)}:
+              </span>
+              <span>{formatCurrency(rule.hourlyRate, locale)}/h</span>
+            </span>
+          ))}
+        </div>
+      )}
       <div
         className="overflow-x-auto border border-slate-200 bg-white shadow-sm"
         onPointerUp={completeSelection}
@@ -137,11 +154,6 @@ export function ScheduleGrid({
               <div className="sticky left-0 z-10 flex min-h-16 items-center border-b border-r border-slate-200 bg-white px-4">
                 <div>
                   <p className="font-bold text-slate-900">{court.name}</p>
-                  <p className="text-xs text-slate-500">
-                    {tBooking('ratePerHour', {
-                      rate: formatCurrency(court.hourlyRate, locale).replace(/[đ\sVND]/g, ''),
-                    })}
-                  </p>
                 </div>
               </div>
               {slots.map((slot, index) => {

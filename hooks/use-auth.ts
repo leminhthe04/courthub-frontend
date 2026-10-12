@@ -7,7 +7,13 @@ import {
   subscribeSessionChange,
 } from '../lib/http';
 import { authService } from '../lib/services';
-import type { LoginDto, RegisterDto } from '../lib/types';
+import type {
+  AuthUser,
+  ChangePasswordDto,
+  LoginDto,
+  RegisterDto,
+  UpdateProfileDto,
+} from '../lib/types';
 
 export const AUTH_KEYS = {
   me: ['me'] as const,
@@ -43,7 +49,7 @@ export function useCurrentUser() {
   };
 }
 
-export function useLogin(options?: { onSuccess?: () => void }) {
+export function useLogin(options?: { onSuccess?: (data: { user: AuthUser }) => void }) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -51,7 +57,7 @@ export function useLogin(options?: { onSuccess?: () => void }) {
     onSuccess: (result) => {
       setSessionHint();
       queryClient.setQueryData(AUTH_KEYS.me, result);
-      options?.onSuccess?.();
+      options?.onSuccess?.(result);
     },
   });
 }
@@ -82,6 +88,39 @@ export function useLogout(options?: { onSuccess?: () => void }) {
     onError: () => {
       clearSessionHint();
       queryClient.setQueryData(AUTH_KEYS.me, null);
+    },
+  });
+}
+
+export function useUpdateProfile(options?: {
+  onSuccess?: (data: { user: AuthUser }) => void;
+  onError?: (err: unknown) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: UpdateProfileDto) => authService.updateProfile(dto),
+    onSuccess: (result) => {
+      queryClient.setQueryData(AUTH_KEYS.me, result);
+      options?.onSuccess?.(result);
+    },
+    onError: (err) => {
+      options?.onError?.(err);
+    },
+  });
+}
+
+export function useChangePassword(options?: {
+  onSuccess?: () => void;
+  onError?: (err: unknown) => void;
+}) {
+  return useMutation({
+    mutationFn: (dto: ChangePasswordDto) => authService.changePassword(dto),
+    onSuccess: () => {
+      options?.onSuccess?.();
+    },
+    onError: (err) => {
+      options?.onError?.(err);
     },
   });
 }
