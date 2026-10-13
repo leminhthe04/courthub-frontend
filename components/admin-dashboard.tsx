@@ -5,18 +5,23 @@ import { useState } from 'react';
 import {
   useAdminBookings,
   useAdminCategories,
-  useAdminVenues,
+  useAdminPartnerRequests,
+  useAdminUsers,
   useCreateCategory,
   useCurrentUser,
   useDeleteCategory,
-  useReviewVenue,
+  useReviewPartnerRequest,
+  useUpdateAdminUserRole,
+  useUpdateAdminUserStatus,
   useUpdateCategory,
 } from '../hooks';
 import { getLocalizedErrorMessage } from '../lib/formatters';
-import type { Category } from '../lib/types';
+import { showConfirm } from '../lib/toast';
+import type { AdminUser, Category, PartnerRequest, Role } from '../lib/types';
 import { AdminBookingsTab } from './admin-bookings-tab';
 import { AdminCategoriesTab } from './admin-categories-tab';
-import { AdminPendingVenuesTab } from './admin-pending-venues-tab';
+import { AdminPartnerRequestsTab } from './admin-partner-requests-tab';
+import { AdminUsersTab } from './admin-users-tab';
 
 export function AdminDashboard() {
   const locale = useLocale();
@@ -24,7 +29,9 @@ export function AdminDashboard() {
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
 
-  const [activeTab, setActiveTab] = useState<'pending' | 'categories' | 'bookings'>('pending');
+  const [activeTab, setActiveTab] = useState<
+    'categories' | 'bookings' | 'users' | 'partnerRequests'
+  >('users');
 
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newName, setNewName] = useState('');
@@ -39,10 +46,10 @@ export function AdminDashboard() {
   const me = useCurrentUser();
   const isAdmin = me.user?.role === 'ADMIN';
 
-  const venues = useAdminVenues(isAdmin);
   const bookings = useAdminBookings(isAdmin);
   const categories = useAdminCategories(isAdmin);
-  const review = useReviewVenue();
+  const users = useAdminUsers(isAdmin);
+  const partnerRequests = useAdminPartnerRequests(isAdmin);
 
   const createCategory = useCreateCategory({
     onSuccess: () => {
@@ -68,6 +75,21 @@ export function AdminDashboard() {
     onError: (err) => setActionError(getLocalizedErrorMessage(err, tErrors)),
   });
 
+  const updateUserStatus = useUpdateAdminUserStatus({
+    onSuccess: () => setActionError(null),
+    onError: (err) => setActionError(getLocalizedErrorMessage(err, tErrors)),
+  });
+
+  const updateUserRole = useUpdateAdminUserRole({
+    onSuccess: () => setActionError(null),
+    onError: (err) => setActionError(getLocalizedErrorMessage(err, tErrors)),
+  });
+
+  const reviewPartnerRequest = useReviewPartnerRequest({
+    onSuccess: () => setActionError(null),
+    onError: (err) => setActionError(getLocalizedErrorMessage(err, tErrors)),
+  });
+
   if (me.isLoading) {
     return <div className="mx-auto max-w-7xl px-5 py-16 text-slate-500">{tCommon('loading')}</div>;
   }
@@ -85,11 +107,14 @@ export function AdminDashboard() {
     );
   }
 
-  const venueList = venues.data ?? [];
   const bookingList = bookings.data ?? [];
   const categoryList = categories.data ?? [];
-  const pendingCount = venueList.filter((item) => item.status === 'PENDING').length;
+  const userList = users.data ?? [];
+  const partnerRequestList = partnerRequests.data ?? [];
   const categoriesCount = categoryList.length;
+  const pendingPartnerRequests = partnerRequestList.filter(
+    (request) => request.status === 'PENDING',
+  ).length;
 
   const handleStartEdit = (category: Category) => {
     if ((category.venueCount ?? 0) > 0) {
@@ -141,39 +166,41 @@ export function AdminDashboard() {
 
   const clearActionError = () => setActionError(null);
 
+  const handleUserStatusChange = (user: AdminUser, isActive: boolean) => {
+    updateUserStatus.mutate({ id: user.id, isActive });
+  };
+
+  const handleUserRoleChange = (user: AdminUser, role: Role) => {
+    updateUserRole.mutate({ id: user.id, role });
+  };
+
+  const handlePartnerRequestReview = async (
+    request: PartnerRequest,
+    action: 'approve' | 'reject',
+  ) => {
+    const result = await showConfirm({
+      title:
+        action === 'approve' ? t('approvePartnerRequestConfirm') : t('rejectPartnerRequestConfirm'),
+      confirmButtonText: tCommon('confirm'),
+      cancelButtonText: tCommon('cancel'),
+    });
+    if (!result.isConfirmed) return;
+    reviewPartnerRequest.mutate({ id: request.id, action });
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-5 py-12">
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">Operations</p>
       <h1 className="mt-2 text-4xl font-black">{t('title')}</h1>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-4">
-        <Metric label="Venues" value={venueList.length} />
+        <Metric label={t('usersTitle')} value={userList.length} />
         <Metric label={t('tabCategories')} value={categoriesCount} />
         <Metric label="Bookings" value={bookingList.length} />
-        <Metric label={tCommon('status.pending')} value={pendingCount} />
+        <Metric label={t('partnerRequestsTitle')} value={pendingPartnerRequests} />
       </div>
 
       <div className="mt-10 flex border-b border-slate-200">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('pending');
-            clearActionError();
-          }}
-          className={`flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition ${
-            activeTab === 'pending'
-              ? 'border-emerald-600 text-emerald-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          {t('tabPendingVenues')}
-          {pendingCount > 0 && (
-            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
-              {pendingCount}
-            </span>
-          )}
-        </button>
-
         <button
           type="button"
           onClick={() => {
@@ -209,21 +236,50 @@ export function AdminDashboard() {
             {bookingList.length}
           </span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('users');
+            clearActionError();
+          }}
+          className={`flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition ${
+            activeTab === 'users'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          {t('tabUsers')}
+          <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700">
+            {userList.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('partnerRequests');
+            clearActionError();
+          }}
+          className={`flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition ${
+            activeTab === 'partnerRequests'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          {t('tabPartnerRequests')}
+          {pendingPartnerRequests > 0 && (
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
+              {pendingPartnerRequests}
+            </span>
+          )}
+        </button>
       </div>
 
       {actionError && (
         <div className="mt-6 rounded border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
           {actionError}
         </div>
-      )}
-
-      {activeTab === 'pending' && (
-        <AdminPendingVenuesTab
-          venues={venueList}
-          pendingCount={pendingCount}
-          isReviewing={review.isPending}
-          onReview={(id, action) => review.mutate({ id, action })}
-        />
       )}
 
       {activeTab === 'categories' && (
@@ -259,6 +315,23 @@ export function AdminDashboard() {
       )}
 
       {activeTab === 'bookings' && <AdminBookingsTab bookings={bookingList} />}
+      {activeTab === 'users' && (
+        <AdminUsersTab
+          users={userList}
+          currentUserId={me.user?.userId ?? ''}
+          isUpdatingStatus={updateUserStatus.isPending}
+          isUpdatingRole={updateUserRole.isPending}
+          onStatusChange={handleUserStatusChange}
+          onRoleChange={handleUserRoleChange}
+        />
+      )}
+      {activeTab === 'partnerRequests' && (
+        <AdminPartnerRequestsTab
+          requests={partnerRequestList}
+          isReviewing={reviewPartnerRequest.isPending}
+          onReview={handlePartnerRequestReview}
+        />
+      )}
     </div>
   );
 }

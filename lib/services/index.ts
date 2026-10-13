@@ -5,3 +5,4 @@ export * from './partner.service';
 export * from './admin.service';
 export * from './categories.service';
 export * from './location.service';
+export * from './partner-requests.service';
