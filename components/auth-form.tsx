@@ -10,6 +10,7 @@ import { useCurrentUser, useLogin, useRegister } from '../hooks';
 import { getLocalizedErrorMessage } from '../lib/formatters';
 import { Link, useRouter } from '../lib/i18n/routing';
 import { Role } from '@/lib/types';
+import { GoogleLoginButton } from './google-login-button';
 
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="mt-1 text-xs text-rose-600">{message}</p> : null;
@@ -62,7 +63,7 @@ export function LoginForm() {
           <input
             {...form.register('identifier')}
             placeholder={t('identifierPlaceholder')}
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full border rounded  border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.identifier?.message} />
         </label>
@@ -72,7 +73,7 @@ export function LoginForm() {
             type="password"
             {...form.register('password')}
             placeholder={t('passwordPlaceholder')}
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.password?.message} />
         </label>
@@ -84,10 +85,11 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full cursor-pointer bg-slate-950 px-4 py-3 font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
+          className="w-full cursor-pointer rounded bg-slate-950 px-4 py-3 font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
         >
           {mutation.isPending ? t('loggingIn') : t('loginButton')}
         </button>
+        <GoogleLoginButton />
         <p className="text-center text-sm text-slate-500">
           {t('noAccount')}{' '}
           <Link href="/register" className="font-bold text-emerald-600 hover:underline">
@@ -139,7 +141,7 @@ export function RegisterForm() {
           <input
             {...form.register('fullName')}
             placeholder={t('fullNamePlaceholder')}
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.fullName?.message} />
         </label>
@@ -149,7 +151,7 @@ export function RegisterForm() {
             {...form.register('email')}
             type="email"
             placeholder="you@example.com"
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.email?.message} />
         </label>
@@ -158,7 +160,7 @@ export function RegisterForm() {
           <input
             {...form.register('phone')}
             placeholder="0901234567"
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.phone?.message} />
         </label>
@@ -168,7 +170,7 @@ export function RegisterForm() {
             type="password"
             {...form.register('password')}
             placeholder={t('passwordPlaceholder')}
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.password?.message} />
         </label>
@@ -180,7 +182,7 @@ export function RegisterForm() {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full cursor-pointer bg-emerald-600 px-4 py-3 font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
+          className="w-full cursor-pointer rounded bg-emerald-600 px-4 py-3 font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
         >
           {mutation.isPending ? t('registering') : t('registerButton')}
         </button>
@@ -206,7 +208,7 @@ function AuthCard({
 }) {
   return (
     <div className="mx-auto max-w-md px-5 py-14">
-      <div className="border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
+      <div className="border border-slate-200 rounded bg-white p-7 shadow-sm sm:p-9">
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">CourtHub</p>
         <h1 className="mt-3 text-3xl font-black tracking-tight">{title}</h1>
         <p className="mt-2 mb-7 text-sm leading-6 text-slate-500">{subtitle}</p>
