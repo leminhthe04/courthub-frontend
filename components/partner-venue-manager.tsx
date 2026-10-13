@@ -81,7 +81,7 @@ export function PartnerVenueManager({ venueId }: PartnerVenueManagerProps) {
       </div>
 
       {/* Venue Header Banner */}
-      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mt-4 rounded border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div>
             <div className="flex items-center gap-2">

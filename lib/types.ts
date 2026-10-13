@@ -65,6 +65,7 @@ export type Court = {
   id: string;
   name: string;
   isActive: boolean;
+  deletedAt?: string | null;
 };
 
 export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';

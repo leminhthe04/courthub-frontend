@@ -5,7 +5,7 @@ import { Pencil, Plus, X, Trash } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSetPricingRules } from '../hooks';
 import { formatCurrency, getLocalizedErrorMessage } from '../lib/formatters';
-import { showToast } from '../lib/toast';
+import { showConfirm, showToast } from '../lib/toast';
 import type { DayOfWeek, VenueDetail, VenuePricingRule } from '../lib/types';
 
 const DAYS: DayOfWeek[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -36,6 +36,7 @@ function parsePriceInput(value: string) {
 export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
   const locale = useLocale();
   const t = useTranslations('partnerDashboard');
+  const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const [rules, setRules] = useState(copyRules(venue.pricingRules ?? []));
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(DAYS);
@@ -120,7 +121,17 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
     ]);
   };
 
-  const removeRule = (id: string) => persistRules(rules.filter((rule) => rule.id !== id));
+  const removeRule = async (rule: (typeof rules)[number]) => {
+    const result = await showConfirm({
+      title: t('deletePricingRuleConfirm'),
+      text: `${rule.startTime.slice(0, 5)}-${rule.endTime.slice(0, 5)}`,
+      confirmButtonText: tCommon('confirm'),
+      cancelButtonText: tCommon('cancel'),
+    });
+
+    if (!result.isConfirmed) return;
+    persistRules(rules.filter((item) => item.id !== rule.id));
+  };
 
   const addRuleForDay = (event: React.FormEvent, day: DayOfWeek) => {
     event.preventDefault();
@@ -167,7 +178,7 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
 
   return (
     <section className="mt-8 space-y-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-black text-slate-900">{t('pricingRulesTitle')}</h2>
@@ -178,7 +189,7 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[280px_1fr]">
-          <form onSubmit={addRule} className="space-y-4 rounded-lg border border-slate-200 p-4">
+          <form onSubmit={addRule} className="space-y-4 rounded border border-slate-200 p-4">
             <h3 className="font-black text-slate-900">{t('addSeriesPricingRule')}</h3>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs font-bold text-slate-700">
@@ -189,7 +200,7 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
                   step="1800"
                   value={newStart}
                   onChange={(event) => setNewStart(event.target.value)}
-                  className="mt-1 w-full rounded-md border border-slate-200 px-2 py-2 text-sm"
+                  className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-sm"
                 />
               </label>
               <label className="text-xs font-bold text-slate-700">
@@ -200,7 +211,7 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
                   step="1800"
                   value={newEnd}
                   onChange={(event) => setNewEnd(event.target.value)}
-                  className="mt-1 w-full rounded-md border border-slate-200 px-2 py-2 text-sm"
+                  className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-sm"
                 />
               </label>
             </div>
@@ -213,7 +224,7 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
                 value={formatPriceInput(newRate)}
                 onChange={(event) => setNewRate(formatPriceInput(event.target.value))}
                 onFocus={(event) => event.currentTarget.select()}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded border border-slate-200 px-3 py-2 text-sm"
               />
             </label>
             <div>
@@ -233,7 +244,7 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
             </div>
             <button
               type="submit"
-              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-700"
+              className="w-full rounded bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-700"
             >
               + {t('add')}
             </button>
@@ -242,7 +253,7 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
           <div className="space-y-4">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {DAYS.map((day) => (
-                <div key={day} className="rounded-lg border border-slate-200 p-4">
+                <div key={day} className="rounded border border-slate-200 p-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                     <h3 className="font-black text-slate-900">{dayLabel(day)}</h3>
                     <div className="flex items-center gap-2">
@@ -375,7 +386,9 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => removeRule(rule.id)}
+                                  onClick={() => removeRule(rule)}
+                                  title={t('deletePricingRule')}
+                                  aria-label={`${t('deletePricingRule')} - ${rule.startTime.slice(0, 5)}`}
                                   className="text-xs font-bold text-rose-600 hover:text-rose-800"
                                 >
                                   <Trash className="h-3.5 w-3.5" />
