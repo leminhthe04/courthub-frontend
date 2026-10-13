@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ShieldCheck, User, KeyRound } from 'lucide-react';
+import { Check, ShieldCheck, User, KeyRound } from 'lucide-react';
 import { useCurrentUser, useUpdateProfile, useChangePassword } from '../hooks';
 import { getLocalizedErrorMessage } from '../lib/formatters';
 import { Link } from '../lib/i18n/routing';
@@ -164,7 +164,7 @@ export function ProfileManager() {
           {/* <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4 sm:border-t-0 sm:pt-0">
             {user.role === 'CUSTOMER' && (
               <Link
-                href="/dashboard"
+                href="/history"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
               >
                 <span>{t('goToBookings')}</span>
@@ -209,7 +209,12 @@ export function ProfileManager() {
           <form onSubmit={handleProfileSubmit} className="mt-5 space-y-4">
             {profileSuccessMsg && (
               <div className="rounded-lg bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 border border-emerald-200">
-                ✓ {t('profileUpdated')}
+                <Check
+                  className="mr-1 inline-block h-3.5 w-3.5"
+                  strokeWidth={3}
+                  aria-hidden="true"
+                />
+                {t('profileUpdated')}
               </div>
             )}
             {profileErrorMsg && (
@@ -287,7 +292,12 @@ export function ProfileManager() {
           <form onSubmit={handlePasswordSubmit} className="mt-5 space-y-4">
             {passwordSuccessMsg && (
               <div className="rounded-lg bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 border border-emerald-200">
-                ✓ {t('passwordChanged')}
+                <Check
+                  className="mr-1 inline-block h-3.5 w-3.5"
+                  strokeWidth={3}
+                  aria-hidden="true"
+                />
+                {t('passwordChanged')}
               </div>
             )}
             {passwordErrorMsg && (

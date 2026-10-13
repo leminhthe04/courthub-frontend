@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useCategories, useVenues } from '../hooks';
 import { Link } from '../lib/i18n/routing';
+import { MoveRight } from 'lucide-react';
 
 export function VenueExplorer() {
   const t = useTranslations('venues');
@@ -21,7 +22,7 @@ export function VenueExplorer() {
     <section className="mx-auto max-w-7xl px-5 pb-12">
       <div className="relative overflow-hidden bg-slate-950 px-6 py-14 text-white shadow-xl shadow-slate-200 sm:px-12">
         <div className="absolute -right-20 -top-24 h-72 w-72 bg-emerald-400/30 blur-3xl" />
-        <div className="relative max-w-2xl">
+        <div className="relative max-w-3xl">
           <p className="mb-4 text-sm font-bold uppercase tracking-[0.22em] text-emerald-300">
             CourtHub
           </p>
@@ -31,7 +32,7 @@ export function VenueExplorer() {
       </div>
 
       <form
-        className="relative z-10 -mt-7 grid gap-3 border border-slate-200 bg-white p-4 shadow-lg sm:grid-cols-[1.5fr_1fr_1fr_auto]"
+        className="relative rounded-b z-10 -mt-7 grid gap-3 border border-slate-200 bg-white p-4 shadow-lg sm:grid-cols-[1.5fr_1fr_1fr_auto]"
         onSubmit={(event) => {
           event.preventDefault();
           setSubmitted({ search, city, sportType });
@@ -40,21 +41,19 @@ export function VenueExplorer() {
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder={
-            t('subtitle') ? 'Tên sân hoặc địa chỉ...' : 'Search court name or address...'
-          }
-          className="border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+          placeholder={t('searchPlaceholder')}
+          className="rounded border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
         />
         <input
           value={city}
           onChange={(event) => setCity(event.target.value)}
           placeholder={t('filterCity')}
-          className="border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+          className="rounded border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
         />
         <select
           value={sportType}
           onChange={(event) => setSportType(event.target.value)}
-          className="border border-slate-200 bg-white px-4 py-3 outline-none focus:border-emerald-500"
+          className="rounded border border-slate-200 bg-white px-4 py-3 outline-none focus:border-emerald-500"
         >
           <option value="">{t('allSports')}</option>
           {categories?.map((cat) => (
@@ -65,7 +64,7 @@ export function VenueExplorer() {
         </select>
         <button
           type="submit"
-          className="cursor-pointer bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700"
+          className="cursor-pointer rounded bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700"
         >
           {tCommon('search')}
         </button>
@@ -104,7 +103,7 @@ export function VenueExplorer() {
           <Link
             key={venue.id}
             href={`/venues/${venue.id}`}
-            className="group overflow-hidden border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-xl"
+            className="group flex h-full flex-col overflow-hidden rounded border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-xl"
           >
             <div
               className="relative h-40 overflow-hidden bg-linear-to-br from-emerald-400 via-teal-500 to-slate-900"
@@ -121,20 +120,20 @@ export function VenueExplorer() {
               {venue.imageUrl && (
                 <div className="absolute inset-0 bg-slate-950/25 transition group-hover:bg-slate-950/10" />
               )}
-              <span className="absolute left-4 top-4 bg-white/90 px-3 py-1 text-xs font-bold text-slate-800">
+              <span className="rounded absolute left-4 top-4 bg-white/90 px-3 py-1 text-xs font-bold text-slate-800">
                 {venue.sportType}
               </span>
             </div>
-            <div className="p-5">
+            <div className="flex flex-1 flex-col p-5">
               <h3 className="text-xl font-bold group-hover:text-emerald-600">{venue.name}</h3>
               <p className="mt-2 text-sm text-slate-500">
                 {venue.address}, {venue.city}
               </p>
               <p className="mt-4 line-clamp-2 text-sm leading-6 text-slate-600">
-                {venue.description ?? '...'}
+                {venue.description ?? ''}
               </p>
-              <span className="mt-5 inline-flex text-sm font-bold text-emerald-600">
-                {t('viewDetails')} →
+              <span className="mt-auto inline-flex pt-5 text-sm font-bold text-emerald-600">
+                {t('viewDetails')} <MoveRight className="ml-2 h-5 w-4" />
               </span>
             </div>
           </Link>
