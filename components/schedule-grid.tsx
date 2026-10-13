@@ -184,30 +184,60 @@ export function ScheduleGrid({
     [pricingIntervals, slotTimes],
   );
 
-  const isRangeBlocked = useMemo(() => {
-    if (!drag) return false;
-    const first = Math.min(drag.startIndex, drag.endIndex);
-    const last = Math.max(drag.startIndex, drag.endIndex);
-    for (let i = first; i <= last; i++) {
-      if (isBooked(drag.courtId, i) || !hasPricingRule(i)) return true;
-    }
-    return false;
-  }, [drag, hasPricingRule, isBooked]);
+  const isSlotSelectable = useCallback(
+    (courtId: string, slotIndex: number) => {
+      return !isBooked(courtId, slotIndex) && hasPricingRule(slotIndex);
+    },
+    [hasPricingRule, isBooked],
+  );
+
+  const getValidDragEndIndex = useCallback(
+    (courtId: string, startIndex: number, targetIndex: number) => {
+      if (startIndex === targetIndex) return startIndex;
+
+      const direction = targetIndex > startIndex ? 1 : -1;
+      let currentIndex = startIndex;
+
+      while (currentIndex !== targetIndex) {
+        const nextIndex = currentIndex + direction;
+        if (!isSlotSelectable(courtId, nextIndex)) return currentIndex;
+        currentIndex = nextIndex;
+      }
+
+      return currentIndex;
+    },
+    [isSlotSelectable],
+  );
+
+  const updateDragEnd = useCallback(
+    (courtId: string, targetIndex: number) => {
+      const currentDrag = dragRef.current;
+      if (!currentDrag || currentDrag.courtId !== courtId) return;
+
+      const endIndex = getValidDragEndIndex(courtId, currentDrag.startIndex, targetIndex);
+      if (currentDrag.endIndex === endIndex) return;
+
+      const nextDrag = { ...currentDrag, endIndex };
+      dragRef.current = nextDrag;
+      setDrag(nextDrag);
+    },
+    [getValidDragEndIndex],
+  );
 
   const completeSelection = useCallback(() => {
     const currentDrag = dragRef.current;
     if (readOnly || !currentDrag) return;
-    const first = Math.min(currentDrag.startIndex, currentDrag.endIndex);
-    const last = Math.max(currentDrag.startIndex, currentDrag.endIndex);
+    const boundedEndIndex = getValidDragEndIndex(
+      currentDrag.courtId,
+      currentDrag.startIndex,
+      currentDrag.endIndex,
+    );
+    const first = Math.min(currentDrag.startIndex, boundedEndIndex);
+    const last = Math.max(currentDrag.startIndex, boundedEndIndex);
     const selectedSlots = slots.slice(first, last + 1);
-    const hasUnpricedSlot = selectedSlots.some((_, idx) => !hasPricingRule(first + idx));
     const blocked = selectedSlots.some((_, idx) => isBooked(currentDrag.courtId, first + idx));
     setDrag(null);
     dragRef.current = null;
-    if (hasUnpricedSlot) {
-      setWarning(t('noPricingRule'));
-      return;
-    }
     if (blocked) {
       setWarning(
         locale === 'vi'
@@ -252,14 +282,13 @@ export function ScheduleGrid({
   }, [
     readOnly,
     slots,
-    hasPricingRule,
     isBooked,
+    getValidDragEndIndex,
     locale,
     schedule.date,
     activeSelection,
     slotTimes,
     onSelect,
-    t,
   ]);
 
   const isDragging = Boolean(drag);
@@ -278,18 +307,7 @@ export function ScheduleGrid({
       const slotIndex = parseInt(slotIndexStr, 10);
       if (isNaN(slotIndex)) return;
 
-      if (
-        dragRef.current &&
-        dragRef.current.courtId === courtId &&
-        dragRef.current.endIndex !== slotIndex
-      ) {
-        setDrag((prev) => {
-          if (!prev) return null;
-          const next = { ...prev, endIndex: slotIndex };
-          dragRef.current = next;
-          return next;
-        });
-      }
+      updateDragEnd(courtId, slotIndex);
     };
 
     const handleGlobalUp = () => {
@@ -305,7 +323,7 @@ export function ScheduleGrid({
       window.removeEventListener('pointerup', handleGlobalUp);
       window.removeEventListener('mouseup', handleGlobalUp);
     };
-  }, [isDragging, completeSelection]);
+  }, [isDragging, completeSelection, updateDragEnd]);
 
   const prefetchDay = (offset: number) => {
     if (!schedule.venue?.id) return;
@@ -379,8 +397,8 @@ export function ScheduleGrid({
           {'<'}
         </button>
 
-        <div className="relative inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-2.5 shadow-xs transition hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
-          <span>{formatWeekday(schedule.date, locale)}</span>
+        <div className="relative inline-flex h-9 w-[190px] shrink-0 items-center rounded-lg border border-slate-200 bg-white px-2.5 shadow-xs transition hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+          <span className="shrink-0">{formatWeekday(schedule.date, locale)}</span>
 
           <input
             ref={dateInputRef}
@@ -390,7 +408,7 @@ export function ScheduleGrid({
             disabled={!onDateChange}
             onChange={handleDateInput}
             aria-label={locale === 'vi' ? 'Chọn ngày xem lịch' : 'Select date'}
-            className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
+            className="min-w-0 flex-1 bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
           />
         </div>
 
@@ -411,7 +429,10 @@ export function ScheduleGrid({
           <i className="h-3 w-3 bg-emerald-100" /> {t('available')}
         </span>
         <span className="inline-flex items-center gap-2">
-          <i className="h-3 w-3 bg-slate-300" /> {t('booked')}
+          <i className="h-3 w-3 bg-amber-300" /> {t('booked')}
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <i className="h-3 w-3 bg-slate-100" /> {t('unavailable')}
         </span>
         {!readOnly && (
           <span className="inline-flex items-center gap-2">
@@ -553,24 +574,17 @@ export function ScheduleGrid({
                         ? undefined
                         : () => {
                             if (dragRef.current?.courtId === court.id) {
-                              setDrag((prev) => {
-                                if (!prev) return null;
-                                const next = { ...prev, endIndex: index };
-                                dragRef.current = next;
-                                return next;
-                              });
+                              updateDragEnd(court.id, index);
                             }
                           }
                     }
                     className={`min-h-16 border-b border-r border-slate-100 transition select-none ${
                       unpriced
-                        ? 'cursor-not-allowed bg-slate-200'
+                        ? 'bg-slate-100'
                         : booked
-                          ? 'cursor-not-allowed bg-slate-300'
+                          ? 'bg-amber-300'
                           : isSelected
-                            ? isRangeBlocked && isBeingDragged
-                              ? 'bg-rose-400 ring-2 ring-rose-500 ring-inset cursor-pointer'
-                              : 'bg-blue-500 cursor-pointer shadow-inner'
+                            ? 'bg-blue-500 cursor-pointer shadow-inner'
                             : readOnly
                               ? 'cursor-default bg-emerald-50/70'
                               : 'cursor-pointer bg-emerald-50 hover:bg-emerald-200'

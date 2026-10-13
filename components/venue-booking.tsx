@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { Check } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useBookingSelection } from '../hooks/use-booking-selection';
 import { useCurrentUser, useVenueDetail, useVenueSchedule } from '../hooks';
@@ -215,7 +216,7 @@ export function VenueBooking({ venueId }: { venueId: string }) {
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-700">
-                ✓
+                <Check className="h-5 w-5" strokeWidth={3} aria-hidden="true" />
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">

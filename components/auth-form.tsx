@@ -10,6 +10,7 @@ import { useCurrentUser, useLogin, useRegister } from '../hooks';
 import { getLocalizedErrorMessage } from '../lib/formatters';
 import { Link, useRouter } from '../lib/i18n/routing';
 import { Role } from '@/lib/types';
+import { GoogleLoginButton } from './google-login-button';
 
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="mt-1 text-xs text-rose-600">{message}</p> : null;
@@ -55,14 +56,14 @@ export function LoginForm() {
   });
 
   return (
-    <AuthCard title={t('loginTitle')} subtitle={t('loginSubtitle')}>
+    <AuthCard title={t('loginTitle')}>
       <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-4">
         <label className="block text-sm font-semibold">
           {t('identifierLabel')}
           <input
             {...form.register('identifier')}
             placeholder={t('identifierPlaceholder')}
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full border rounded  border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.identifier?.message} />
         </label>
@@ -72,10 +73,18 @@ export function LoginForm() {
             type="password"
             {...form.register('password')}
             placeholder={t('passwordPlaceholder')}
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.password?.message} />
         </label>
+        <div className="text-right">
+          <Link
+            href="/forgot-password"
+            className="text-sm font-bold text-orange-600 hover:underline"
+          >
+            {t('forgotPassword')}
+          </Link>
+        </div>
         {mutation.isError && (
           <p className="bg-rose-50 p-3 text-sm text-rose-700">
             {getLocalizedErrorMessage(mutation.error, tErrors)}
@@ -84,10 +93,11 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full cursor-pointer bg-slate-950 px-4 py-3 font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
+          className="w-full cursor-pointer rounded bg-slate-950 px-4 py-3 font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
         >
           {mutation.isPending ? t('loggingIn') : t('loginButton')}
         </button>
+        <GoogleLoginButton />
         <p className="text-center text-sm text-slate-500">
           {t('noAccount')}{' '}
           <Link href="/register" className="font-bold text-emerald-600 hover:underline">
@@ -104,20 +114,15 @@ export function RegisterForm() {
   const tErrors = useTranslations('errors');
   const router = useRouter();
 
-  const registerSchema = z
-    .object({
-      fullName: z.string().min(2, t('validation.nameMin')),
-      email: z.string().email(t('validation.invalidEmail')).or(z.literal('')),
-      phone: z
-        .string()
-        .regex(/^\+?[0-9\s().-]{8,24}$/, t('validation.invalidPhone'))
-        .or(z.literal('')),
-      password: z.string().min(8, t('validation.passwordMin')),
-    })
-    .refine((value) => value.email || value.phone, {
-      message: t('validation.emailOrPhoneRequired'),
-      path: ['email'],
-    });
+  const registerSchema = z.object({
+    fullName: z.string().min(2, t('validation.nameMin')),
+    email: z.string().email(t('validation.invalidEmail')),
+    phone: z
+      .string()
+      .regex(/^\+?[0-9\s().-]{8,24}$/, t('validation.invalidPhone'))
+      .or(z.literal('')),
+    password: z.string().min(8, t('validation.passwordMin')),
+  });
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -132,24 +137,25 @@ export function RegisterForm() {
   });
 
   return (
-    <AuthCard title={t('registerTitle')} subtitle={t('registerSubtitle')}>
+    <AuthCard title={t('registerTitle')}>
       <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-4">
         <label className="block text-sm font-semibold">
-          {t('fullNameLabel')}
+          {t('nameLabel') + ' *'}
           <input
             {...form.register('fullName')}
             placeholder={t('fullNamePlaceholder')}
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.fullName?.message} />
         </label>
         <label className="block text-sm font-semibold">
-          {t('emailLabel')}
+          {t('emailLabel') + ' *'}
           <input
             {...form.register('email')}
             type="email"
+            required
             placeholder="you@example.com"
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.email?.message} />
         </label>
@@ -158,7 +164,7 @@ export function RegisterForm() {
           <input
             {...form.register('phone')}
             placeholder="0901234567"
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.phone?.message} />
         </label>
@@ -168,7 +174,7 @@ export function RegisterForm() {
             type="password"
             {...form.register('password')}
             placeholder={t('passwordPlaceholder')}
-            className="mt-2 w-full border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
+            className="mt-2 w-full rounded border border-slate-200 px-4 py-3 font-normal outline-none focus:border-emerald-500"
           />
           <FieldError message={form.formState.errors.password?.message} />
         </label>
@@ -180,7 +186,7 @@ export function RegisterForm() {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full cursor-pointer bg-emerald-600 px-4 py-3 font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
+          className="w-full cursor-pointer rounded bg-emerald-600 px-4 py-3 font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
         >
           {mutation.isPending ? t('registering') : t('registerButton')}
         </button>
@@ -195,21 +201,12 @@ export function RegisterForm() {
   );
 }
 
-function AuthCard({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
+export function AuthCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-md px-5 py-14">
-      <div className="border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
+      <div className="border border-slate-200 rounded bg-white p-7 shadow-sm sm:p-9">
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">CourtHub</p>
-        <h1 className="mt-3 text-3xl font-black tracking-tight">{title}</h1>
-        <p className="mt-2 mb-7 text-sm leading-6 text-slate-500">{subtitle}</p>
+        <h1 className="my-3 text-3xl font-black tracking-tight">{title}</h1>
         {children}
       </div>
     </div>

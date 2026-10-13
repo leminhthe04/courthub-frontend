@@ -36,12 +36,19 @@ export function SiteHeader() {
           CourtHub
         </Link>
         <div className="flex items-center gap-4">
-          <nav className="flex items-center gap-3 text-sm font-semibold text-slate-600">
+          <nav className="flex items-center gap-4 text-sm font-semibold text-slate-600">
             {(isGuest || isCustomer) && (
               <Link href="/" className="hidden hover:text-emerald-600 sm:inline">
                 {t('findCourts')}
               </Link>
             )}
+
+            {isCustomer && (
+              <Link href="/history" className="hidden hover:text-emerald-600 sm:inline">
+                {t('history')}
+              </Link>
+            )}
+
             {user ? (
               <>
                 <Link
@@ -56,11 +63,13 @@ export function SiteHeader() {
                     </span>
                   )}
                 </Link>
+
                 {isAdmin && (
                   <Link href="/admin" className="hidden hover:text-emerald-600 sm:inline">
                     {t('admin')}
                   </Link>
                 )}
+
                 <button
                   type="button"
                   onClick={() => logout.mutate()}
@@ -77,7 +86,7 @@ export function SiteHeader() {
                 </Link>
                 <Link
                   href="/register"
-                  className="bg-slate-950 px-4 py-2 text-white hover:bg-emerald-600"
+                  className="bg-slate-950 px-4 py-2 rounded text-white hover:bg-emerald-600"
                 >
                   {t('register')}
                 </Link>

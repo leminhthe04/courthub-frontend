@@ -6,9 +6,9 @@ export type BookingSelection = {
 };
 
 export type PersistedVenueBookingState = {
-  version: 1;
+  version: 2;
   selectedDate: string;
-  selectionsByDate: Record<string, BookingSelection>;
+  selection: BookingSelection | null;
 };
 
 const STORAGE_KEY_PREFIX = 'courthub:venue-booking:';
@@ -40,9 +40,9 @@ function isBookingSelection(value: unknown): value is BookingSelection {
 
 function emptyState(selectedDate: string): PersistedVenueBookingState {
   return {
-    version: 1,
+    version: 2,
     selectedDate,
-    selectionsByDate: {},
+    selection: null,
   };
 }
 
@@ -60,23 +60,32 @@ export function loadVenueBookingState(venueId: string): PersistedVenueBookingSta
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return null;
 
-    const state = parsed as Partial<PersistedVenueBookingState>;
-    if (state.version !== 1 || !isDateKey(state.selectedDate)) return null;
+    const state = parsed as Partial<PersistedVenueBookingState> & {
+      selectionsByDate?: Record<string, unknown>;
+    };
+    if (!isDateKey(state.selectedDate)) return null;
 
-    const selectionsByDate: Record<string, BookingSelection> = {};
-    if (state.selectionsByDate && typeof state.selectionsByDate === 'object') {
-      for (const [date, selection] of Object.entries(state.selectionsByDate)) {
-        if (isDateKey(date) && isBookingSelection(selection)) {
-          selectionsByDate[date] = selection;
-        }
-      }
+    if (state.version === 2) {
+      return {
+        version: 2,
+        selectedDate: state.selectedDate,
+        selection:
+          state.selection === null || isBookingSelection(state.selection) ? state.selection : null,
+      };
     }
 
-    return {
-      version: 1,
-      selectedDate: state.selectedDate,
-      selectionsByDate,
-    };
+    // Migrate the previous per-date shape by keeping only the selection for
+    // the last viewed date. It is rewritten in the new shape on the next save.
+    if (state.version === 1) {
+      const legacySelection = state.selectionsByDate?.[state.selectedDate];
+      return {
+        version: 2,
+        selectedDate: state.selectedDate,
+        selection: isBookingSelection(legacySelection) ? legacySelection : null,
+      };
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -97,19 +106,10 @@ export function updateVenueBookingSelection(
   selectedDate: string,
   selection: BookingSelection | null,
 ): void {
-  const current = loadVenueBookingState(venueId) ?? emptyState(selectedDate);
-  const selectionsByDate = { ...current.selectionsByDate };
-
-  if (selection) {
-    selectionsByDate[selectedDate] = selection;
-  } else {
-    delete selectionsByDate[selectedDate];
-  }
-
   saveVenueBookingState(venueId, {
-    version: 1,
+    version: 2,
     selectedDate,
-    selectionsByDate,
+    selection,
   });
 }
 

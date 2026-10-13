@@ -65,6 +65,7 @@ export type Court = {
   id: string;
   name: string;
   isActive: boolean;
+  deletedAt?: string | null;
 };
 
 export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
@@ -117,7 +118,6 @@ export type BookingResult = {
     status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
     totalAmount: number;
   };
-  guestToken: string | null;
 };
 
 export type CustomerBooking = {
@@ -137,7 +137,8 @@ export type PartnerBooking = {
   id: string;
   venueName: string;
   courtName: string;
-  guestName: string | null;
+  contactName: string;
+  contactEmail: string | null;
   contactPhone: string;
   startAt: string;
   endAt: string;
@@ -160,6 +161,32 @@ export type AdminBooking = {
   totalAmount: number;
 };
 
+export type AdminUser = {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  role: Role;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type PartnerRequest = {
+  id: string;
+  userId: string;
+  message: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  userName?: string;
+  userEmail?: string | null;
+  userPhone?: string | null;
+  userIsActive?: boolean;
+  userRole?: Role;
+};
+
 // DTOs
 export type LoginDto = {
   identifier: string;
@@ -168,7 +195,7 @@ export type LoginDto = {
 
 export type RegisterDto = {
   fullName: string;
-  email?: string;
+  email: string;
   phone?: string;
   password: string;
 };
@@ -177,7 +204,8 @@ export type CreateBookingDto = {
   courtId: string;
   startAt: string;
   endAt: string;
-  guestName?: string;
+  contactName: string;
+  contactEmail?: string;
   contactPhone?: string;
   note?: string;
 };
@@ -209,11 +237,9 @@ export type UpdateCourtDto = {
 
 export type UpdateProfileDto = {
   fullName?: string;
-  email?: string;
+  email: string;
   phone?: string;
 };
 
-export type ChangePasswordDto = {
-  currentPassword: string;
-  newPassword: string;
-};
+export type RequestPasswordResetDto = { email: string };
+export type ConfirmPasswordResetDto = { token: string; newPassword: string };

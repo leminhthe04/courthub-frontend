@@ -102,3 +102,132 @@ textarea:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--brand-500) 35%, transparent);
   outline-offset: 2px;
 }
+
+/* CourtHub feedback surfaces: keep SweetAlert2 aligned with the app's tokens. */
+.swal2-container {
+  font-family: var(--font-manrope), Arial, sans-serif;
+}
+
+.swal2-popup.courthub-swal-toast,
+.swal2-popup.courthub-swal-confirm {
+  /* border: 1px solid var(--brand-200); */
+  border-radius: 0.25rem;
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow:
+    0 20px 45px rgb(124 45 18 / 0.12),
+    0 4px 12px rgb(28 25 23 / 0.08);
+}
+
+.swal2-popup.courthub-swal-toast {
+  width: min(25rem, calc(100vw - 2rem));
+  padding: 0.9rem 1rem;
+}
+
+.swal2-popup.courthub-swal-confirm {
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+}
+
+.courthub-swal-title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.courthub-swal-confirm .courthub-swal-title {
+  font-size: 1.125rem;
+}
+
+.courthub-swal-text {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.courthub-swal-icon {
+  margin: 0 0.75rem 0 0;
+  transform: scale(0.82);
+}
+
+.courthub-swal-confirm .courthub-swal-icon {
+  margin: 0 auto 0.5rem;
+  transform: scale(0.9);
+}
+
+.courthub-swal-icon.swal2-warning {
+  border-color: var(--brand-300);
+  color: var(--brand-600);
+}
+
+.courthub-swal-icon.swal2-success {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.courthub-swal-icon.swal2-error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.courthub-swal-icon.swal2-info {
+  border-color: var(--brand-400);
+  color: var(--brand-600);
+}
+
+.courthub-swal-progress {
+  background: var(--brand-500);
+}
+
+.courthub-swal-confirm-button,
+.courthub-swal-cancel-button {
+  min-width: 6rem;
+  border-radius: 0.625rem;
+  padding: 0.625rem 1rem;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.25;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.courthub-swal-confirm-button {
+  background: var(--brand-600);
+  color: white;
+}
+
+.courthub-swal-confirm-button:hover {
+  background: var(--brand-700);
+}
+
+.courthub-swal-cancel-button {
+  margin-right: 0.5rem;
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.courthub-swal-cancel-button:hover {
+  background: var(--surface-muted);
+}
+
+.courthub-swal-confirm-button:active,
+.courthub-swal-cancel-button:active {
+  transform: scale(0.96);
+}
+
+@media (max-width: 640px) {
+  .swal2-popup.courthub-swal-toast {
+    margin: 0 0.5rem 0.5rem;
+  }
+
+  .swal2-popup.courthub-swal-confirm {
+    padding: 1.25rem;
+  }
+}

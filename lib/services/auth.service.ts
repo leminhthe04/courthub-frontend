@@ -1,9 +1,10 @@
 import { httpClient, type IHttpClient } from '../http';
 import type {
   AuthUser,
-  ChangePasswordDto,
+  ConfirmPasswordResetDto,
   LoginDto,
   RegisterDto,
+  RequestPasswordResetDto,
   UpdateProfileDto,
 } from '../types';
 
@@ -13,7 +14,9 @@ export interface IAuthService {
   refresh(): Promise<{ user: AuthUser }>;
   getMe(): Promise<{ user: AuthUser }>;
   updateProfile(dto: UpdateProfileDto): Promise<{ user: AuthUser }>;
-  changePassword(dto: ChangePasswordDto): Promise<{ ok: boolean }>;
+  requestPasswordReset(dto: RequestPasswordResetDto): Promise<{ ok: boolean }>;
+  requestPasswordResetForCurrentUser(): Promise<{ ok: boolean }>;
+  confirmPasswordReset(dto: ConfirmPasswordResetDto): Promise<{ ok: boolean }>;
   logout(): Promise<{ ok: boolean }>;
 }
 
@@ -44,8 +47,16 @@ export class AuthService implements IAuthService {
     return this.client.patch<{ user: AuthUser }>('/auth/profile', dto);
   }
 
-  changePassword(dto: ChangePasswordDto): Promise<{ ok: boolean }> {
-    return this.client.patch<{ ok: boolean }>('/auth/password', dto);
+  requestPasswordReset(dto: RequestPasswordResetDto): Promise<{ ok: boolean }> {
+    return this.client.post<{ ok: boolean }>('/auth/password-reset/request', dto);
+  }
+
+  requestPasswordResetForCurrentUser(): Promise<{ ok: boolean }> {
+    return this.client.post<{ ok: boolean }>('/auth/password-reset/request-me');
+  }
+
+  confirmPasswordReset(dto: ConfirmPasswordResetDto): Promise<{ ok: boolean }> {
+    return this.client.post<{ ok: boolean }>('/auth/password-reset/confirm', dto);
   }
 
   logout(): Promise<{ ok: boolean }> {

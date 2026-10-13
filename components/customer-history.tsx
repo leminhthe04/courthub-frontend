@@ -2,13 +2,13 @@
 
 import { useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useCancelBooking, useCurrentUser, useMyBookings } from '../hooks';
-import { formatCurrency, formatDateTime, getLocalizedErrorMessage } from '../lib/formatters';
+import { useCurrentUser, useMyBookings } from '../hooks';
+import { formatCurrency, formatSlotSummary, getLocalizedErrorMessage } from '../lib/formatters';
 import { Link, useRouter } from '../lib/i18n/routing';
 
-export function CustomerDashboard() {
+export function CustomerHistory() {
   const locale = useLocale();
-  const t = useTranslations('customerDashboard');
+  const t = useTranslations('customerHistory');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const router = useRouter();
@@ -16,7 +16,6 @@ export function CustomerDashboard() {
   const me = useCurrentUser();
   const isCustomer = me.user?.role === 'CUSTOMER';
   const bookings = useMyBookings(Boolean(me.user && isCustomer));
-  const cancel = useCancelBooking();
 
   useEffect(() => {
     if (!me.isLoading && me.user?.role === 'PARTNER') {
@@ -46,10 +45,7 @@ export function CustomerDashboard() {
   return (
     <div className="mx-auto max-w-7xl px-5 py-12">
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">Customer</p>
-      <h1 className="mt-2 text-4xl font-black tracking-tight">
-        {t('title')} - {me.user.fullName}
-      </h1>
-      <p className="mt-3 text-slate-500">{t('subtitle')}</p>
+      <h1 className="mt-2 text-4xl font-black tracking-tight">{t('title')}</h1>
       {bookings.isError && (
         <p className="mt-8 bg-rose-50 p-4 text-rose-700">
           {getLocalizedErrorMessage(bookings.error, tErrors)}
@@ -68,7 +64,7 @@ export function CustomerDashboard() {
         {bookings.data?.map((booking) => (
           <article
             key={booking.id}
-            className="flex flex-col justify-between gap-5 border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center"
+            className="flex flex-col rounded justify-between gap-5 border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center"
           >
             <div>
               <div className="flex flex-wrap items-center gap-3">
@@ -76,7 +72,7 @@ export function CustomerDashboard() {
                   {booking.venueName} · {booking.courtName}
                 </h2>
                 <span
-                  className={`px-3 py-1 text-xs font-bold ${
+                  className={`px-3 py-1 text-xs font-bold rounded ${
                     booking.status === 'CONFIRMED'
                       ? 'bg-emerald-100 text-emerald-700'
                       : booking.status === 'PENDING'
@@ -94,26 +90,12 @@ export function CustomerDashboard() {
                 </span>
               </div>
               <p className="mt-2 text-sm text-slate-600">
-                {formatDateTime(booking.startAt, locale)} → {formatDateTime(booking.endAt, locale)}
+                {formatSlotSummary(booking.startAt, booking.endAt, null, null)}
               </p>
               <p className="mt-1 text-sm font-bold text-slate-950">
                 {formatCurrency(booking.totalAmount, locale)}
               </p>
             </div>
-            {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm(t('cancelConfirm'))) {
-                    cancel.mutate({ id: booking.id });
-                  }
-                }}
-                disabled={cancel.isPending}
-                className="cursor-pointer border border-rose-200 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50"
-              >
-                {cancel.isPending ? t('cancelling') : t('cancelBooking')}
-              </button>
-            )}
           </article>
         ))}
       </div>

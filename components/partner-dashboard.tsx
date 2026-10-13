@@ -375,7 +375,7 @@ export function PartnerDashboard() {
                     {formatDateTime(booking.endAt, locale)}
                   </p>
                   <p className="mt-1 text-sm text-slate-500">
-                    {booking.guestName ?? 'Customer'} · {booking.contactPhone}
+                    {booking.contactName} · {booking.contactPhone}
                   </p>
                 </div>
                 <div className="flex gap-2">

@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { partnerService } from '../lib/services';
-import type { CreateCourtDto, CreateVenueDto, UpdateCourtDto } from '../lib/types';
+import type {
+  Court,
+  CreateCourtDto,
+  CreateVenueDto,
+  ScheduleResponse,
+  UpdateCourtDto,
+  VenueDetail,
+} from '../lib/types';
 
 export const PARTNER_KEYS = {
   venues: ['partner-venues'] as const,
@@ -28,6 +35,56 @@ export interface MutationCallbacks {
   onError?: (error: unknown) => void;
 }
 
+type ScheduleCache = ScheduleResponse | undefined;
+
+function updateCourtCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  venueId: string,
+  courtId: string,
+  update: (court: Court) => Court | null,
+) {
+  queryClient.setQueryData<VenueDetail[]>(PARTNER_KEYS.venues, (venues) =>
+    venues?.map((venue) =>
+      venue.id !== venueId
+        ? venue
+        : {
+            ...venue,
+            courts: venue.courts
+              .map((court) => update(court))
+              .filter((court): court is Court => court !== null),
+          },
+    ),
+  );
+
+  queryClient.setQueriesData<ScheduleCache>({ queryKey: ['schedule', venueId] }, (schedule) => {
+    if (!schedule) return schedule;
+    const updatedVenueCourts = schedule.venue.courts
+      .map((court) => (court.id === courtId ? update(court) : court))
+      .filter((court): court is Court => court !== null);
+    const updatedVenueCourt = updatedVenueCourts.find((court) => court.id === courtId);
+    const updatedScheduleCourts = schedule.courts
+      .map((court) => {
+        if (court.id !== courtId) return court;
+        const updatedCourt = update(court);
+        return updatedCourt ? { ...court, ...updatedCourt } : null;
+      })
+      .filter((court): court is ScheduleResponse['courts'][number] => court !== null);
+
+    if (
+      updatedVenueCourt?.isActive &&
+      !updatedScheduleCourts.some((court) => court.id === courtId)
+    ) {
+      updatedScheduleCourts.push({ ...updatedVenueCourt, bookings: [] });
+    }
+
+    return {
+      ...schedule,
+      venue: { ...schedule.venue, courts: updatedVenueCourts },
+      courts: updatedScheduleCourts,
+    };
+  });
+}
+
 export function useCreatePartnerVenue(options?: MutationCallbacks) {
   const queryClient = useQueryClient();
 
@@ -49,8 +106,39 @@ export function useCreatePartnerCourt(options?: MutationCallbacks) {
   return useMutation({
     mutationFn: (params: { venueId: string; dto: CreateCourtDto }) =>
       partnerService.createCourt(params.venueId, params.dto),
-    onSuccess: () => {
+    onSuccess: (createdCourt, params) => {
+      queryClient.setQueryData<VenueDetail[]>(PARTNER_KEYS.venues, (venues) =>
+        venues?.map((venue) =>
+          venue.id !== params.venueId
+            ? venue
+            : {
+                ...venue,
+                courts: [...venue.courts, createdCourt].sort((a, b) =>
+                  a.name.localeCompare(b.name),
+                ),
+              },
+        ),
+      );
+      queryClient.setQueriesData<ScheduleCache>(
+        { queryKey: ['schedule', params.venueId] },
+        (schedule) => {
+          if (!schedule || !createdCourt.isActive) return schedule;
+          return {
+            ...schedule,
+            venue: {
+              ...schedule.venue,
+              courts: [...schedule.venue.courts, createdCourt].sort((a, b) =>
+                a.name.localeCompare(b.name),
+              ),
+            },
+            courts: [...schedule.courts, { ...createdCourt, bookings: [] }].sort((a, b) =>
+              a.name.localeCompare(b.name),
+            ),
+          };
+        },
+      );
       void queryClient.invalidateQueries({ queryKey: PARTNER_KEYS.venues });
+      void queryClient.invalidateQueries({ queryKey: ['schedule', params.venueId] });
       options?.onSuccess?.();
     },
     onError: (err) => {
@@ -63,13 +151,67 @@ export function useUpdatePartnerCourt(options?: MutationCallbacks) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: { courtId: string; dto: UpdateCourtDto }) =>
+    mutationFn: (params: { venueId: string; courtId: string; dto: UpdateCourtDto }) =>
       partnerService.updateCourt(params.courtId, params.dto),
-    onSuccess: () => {
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({ queryKey: PARTNER_KEYS.venues });
+      await queryClient.cancelQueries({ queryKey: ['schedule', params.venueId] });
+      const previousVenues = queryClient.getQueryData<VenueDetail[]>(PARTNER_KEYS.venues);
+      const previousSchedules = queryClient.getQueriesData<ScheduleCache>({
+        queryKey: ['schedule', params.venueId],
+      });
+      updateCourtCaches(queryClient, params.venueId, params.courtId, (court) =>
+        court.id === params.courtId ? { ...court, ...params.dto } : court,
+      );
+      return { previousVenues, previousSchedules };
+    },
+    onSuccess: (_updatedCourt, params) => {
       void queryClient.invalidateQueries({ queryKey: PARTNER_KEYS.venues });
+      void queryClient.invalidateQueries({ queryKey: ['schedule', params.venueId] });
       options?.onSuccess?.();
     },
-    onError: (err) => {
+    onError: (err, _params, context) => {
+      if (context?.previousVenues) {
+        queryClient.setQueryData(PARTNER_KEYS.venues, context.previousVenues);
+      }
+      context?.previousSchedules?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      options?.onError?.(err);
+    },
+  });
+}
+
+export function useDeletePartnerCourt(options?: MutationCallbacks) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: { venueId: string; courtId: string }) =>
+      partnerService.deleteCourt(params.courtId),
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({ queryKey: PARTNER_KEYS.venues });
+      await queryClient.cancelQueries({ queryKey: ['schedule', params.venueId] });
+      const previousVenues = queryClient.getQueryData<VenueDetail[]>(PARTNER_KEYS.venues);
+      const previousSchedules = queryClient.getQueriesData<ScheduleCache>({
+        queryKey: ['schedule', params.venueId],
+      });
+      updateCourtCaches(queryClient, params.venueId, params.courtId, (court) =>
+        court.id === params.courtId ? null : court,
+      );
+      return { previousVenues, previousSchedules };
+    },
+    onSuccess: (_deletedCourt, params) => {
+      void queryClient.invalidateQueries({ queryKey: PARTNER_KEYS.venues });
+      void queryClient.invalidateQueries({ queryKey: ['schedule', params.venueId] });
+      options?.onSuccess?.();
+    },
+    onError: (err, _params, context) => {
+      if (context?.previousVenues) {
+        queryClient.setQueryData(PARTNER_KEYS.venues, context.previousVenues);
+      }
+      context?.previousSchedules?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       options?.onError?.(err);
     },
   });
