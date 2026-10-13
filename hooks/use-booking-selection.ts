@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  getVietnamDateKey,
   loadVenueBookingState,
   updateVenueBookingDate,
   updateVenueBookingSelection,
@@ -13,6 +14,7 @@ export function useBookingSelection(venueId: string, initialDate: string) {
   const [selection, setSelection] = useState<BookingSelection | null>(null);
   const [isReady, setIsReady] = useState(false);
   const restoredVenueRef = useRef<string | null>(null);
+  const currentDateRef = useRef(initialDate);
 
   useEffect(() => {
     if (!venueId) return;
@@ -20,19 +22,31 @@ export function useBookingSelection(venueId: string, initialDate: string) {
     const stored = loadVenueBookingState(venueId);
     const storedDate = stored?.selectedDate;
     const restoredDate = storedDate && storedDate >= initialDate ? storedDate : initialDate;
+    const restoredSelection =
+      stored?.selection && getVietnamDateKey(stored.selection.startAt) === restoredDate
+        ? stored.selection
+        : null;
 
     // Hydrate browser-only localStorage state after SSR has completed.
+    currentDateRef.current = restoredDate;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDate(restoredDate);
-    setSelection(stored?.selectionsByDate[restoredDate] ?? null);
+    setSelection(restoredSelection);
     restoredVenueRef.current = venueId;
     setIsReady(true);
   }, [venueId, initialDate]);
 
   const selectDate = useCallback(
     (nextDate: string) => {
+      currentDateRef.current = nextDate;
       setDate(nextDate);
-      setSelection(loadVenueBookingState(venueId)?.selectionsByDate[nextDate] ?? null);
+
+      const stored = loadVenueBookingState(venueId);
+      const nextSelection =
+        stored?.selection && getVietnamDateKey(stored.selection.startAt) === nextDate
+          ? stored.selection
+          : null;
+      setSelection(nextSelection);
 
       if (restoredVenueRef.current === venueId) {
         updateVenueBookingDate(venueId, nextDate);
@@ -43,13 +57,14 @@ export function useBookingSelection(venueId: string, initialDate: string) {
 
   const updateSelection = useCallback(
     (nextSelection: BookingSelection | null) => {
+      const selectedDate = currentDateRef.current;
       setSelection(nextSelection);
 
       if (restoredVenueRef.current === venueId) {
-        updateVenueBookingSelection(venueId, date, nextSelection);
+        updateVenueBookingSelection(venueId, selectedDate, nextSelection);
       }
     },
-    [date, venueId],
+    [venueId],
   );
 
   return {
