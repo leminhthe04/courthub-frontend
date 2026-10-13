@@ -24,8 +24,8 @@ export function formatDate(value: string | Date, locale = 'vi'): string {
 export function formatSlotSummary(
   startAt: string | Date,
   endAt: string | Date,
-  durationMinutes: number,
-  minuteUnit: string = 'min',
+  durationMinutes: number | null,
+  minuteUnit: string | null,
 ): string {
   const start = new Date(startAt);
   const end = new Date(endAt);
@@ -47,7 +47,11 @@ export function formatSlotSummary(
   const startTime = timeFormatter.format(start);
   const endTime = timeFormatter.format(end);
 
-  return `${startTime}-${endTime} -- ${dateStr} -- ${durationMinutes} ${minuteUnit}`;
+  const timeRange = `${startTime}-${endTime}`;
+  const duration =
+    durationMinutes !== null && minuteUnit !== null ? ` -- ${durationMinutes} ${minuteUnit}` : '';
+
+  return `${timeRange} -- ${dateStr}${duration}`;
 }
 
 export function calculateBookingPrice(
@@ -106,6 +110,28 @@ export function getLocalizedErrorMessage(
   tErrors: ((code: string) => string) & { has?: (code: string) => boolean },
 ): string {
   if (error instanceof ApiError && error.code) {
+    const details = error.details as { message?: unknown } | undefined;
+    const validationMessages = Array.isArray(details?.message)
+      ? details.message.filter((message): message is string => typeof message === 'string')
+      : [];
+
+    if (error.code === 'HTTP_400' && validationMessages.length > 0) {
+      if (
+        validationMessages.some((message) =>
+          message.toLowerCase().includes('contactphone must be a valid phone number'),
+        )
+      ) {
+        try {
+          const translated = tErrors('BOOKING_INVALID_CONTACT_PHONE');
+          if (translated && !translated.startsWith('errors.')) return translated;
+        } catch {
+          // Fall through to the server validation message.
+        }
+      }
+
+      return validationMessages.join(', ');
+    }
+
     if (tErrors.has && !tErrors.has(error.code)) {
       return error.message || tErrors('default');
     }

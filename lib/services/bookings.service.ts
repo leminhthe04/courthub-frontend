@@ -4,7 +4,6 @@ import type { BookingResult, CreateBookingDto, CustomerBooking } from '../types'
 export interface IBookingsService {
   create(dto: CreateBookingDto): Promise<BookingResult>;
   listMine(): Promise<CustomerBooking[]>;
-  cancel(id: string, guestToken?: string): Promise<CustomerBooking>;
 }
 
 export class BookingsService implements IBookingsService {
@@ -16,12 +15,6 @@ export class BookingsService implements IBookingsService {
 
   listMine(): Promise<CustomerBooking[]> {
     return this.client.get<CustomerBooking[]>('/bookings/me');
-  }
-
-  cancel(id: string, guestToken?: string): Promise<CustomerBooking> {
-    return this.client.post<CustomerBooking>(`/bookings/${id}/cancel`, {
-      guestToken: guestToken || undefined,
-    });
   }
 }
 

@@ -16,6 +16,7 @@ export function useMyBookings(enabled = true) {
 
 export function useCreateBooking(options?: {
   onSuccess?: (result: Awaited<ReturnType<typeof bookingsService.create>>) => void;
+  onError?: (error: unknown) => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -26,19 +27,6 @@ export function useCreateBooking(options?: {
       void queryClient.invalidateQueries({ queryKey: ['schedule'] });
       options?.onSuccess?.(result);
     },
-  });
-}
-
-export function useCancelBooking(options?: { onSuccess?: () => void }) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (params: { id: string; guestToken?: string }) =>
-      bookingsService.cancel(params.id, params.guestToken),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: BOOKING_KEYS.myBookings });
-      void queryClient.invalidateQueries({ queryKey: ['schedule'] });
-      options?.onSuccess?.();
-    },
+    onError: options?.onError,
   });
 }

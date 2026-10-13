@@ -9,7 +9,7 @@ import {
 import { authService } from '../lib/services';
 import type {
   AuthUser,
-  ChangePasswordDto,
+  ConfirmPasswordResetDto,
   LoginDto,
   RegisterDto,
   UpdateProfileDto,
@@ -115,12 +115,34 @@ export function useChangePassword(options?: {
   onError?: (err: unknown) => void;
 }) {
   return useMutation({
-    mutationFn: (dto: ChangePasswordDto) => authService.changePassword(dto),
+    mutationFn: () => authService.requestPasswordResetForCurrentUser(),
     onSuccess: () => {
       options?.onSuccess?.();
     },
     onError: (err) => {
       options?.onError?.(err);
     },
+  });
+}
+
+export function useRequestPasswordReset(options?: {
+  onSuccess?: () => void;
+  onError?: (err: unknown) => void;
+}) {
+  return useMutation({
+    mutationFn: (email: string) => authService.requestPasswordReset({ email }),
+    onSuccess: () => options?.onSuccess?.(),
+    onError: (err) => options?.onError?.(err),
+  });
+}
+
+export function useConfirmPasswordReset(options?: {
+  onSuccess?: () => void;
+  onError?: (err: unknown) => void;
+}) {
+  return useMutation({
+    mutationFn: (dto: ConfirmPasswordResetDto) => authService.confirmPasswordReset(dto),
+    onSuccess: () => options?.onSuccess?.(),
+    onError: (err) => options?.onError?.(err),
   });
 }

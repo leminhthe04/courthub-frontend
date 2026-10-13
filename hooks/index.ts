@@ -5,3 +5,4 @@ export * from './use-partner';
 export * from './use-admin';
 export * from './use-categories';
 export * from './use-location';
+export * from './use-partner-requests';

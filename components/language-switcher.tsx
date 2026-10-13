@@ -1,16 +1,22 @@
 'use client';
 
 import { useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { usePathname, useRouter } from '../lib/i18n/routing';
 
 export function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   function switchLocale(nextLocale: 'vi' | 'en') {
     if (nextLocale === locale) return;
-    router.replace(pathname, { locale: nextLocale });
+
+    const queryString = searchParams.toString();
+    const currentRoute = queryString ? `${pathname}?${queryString}` : pathname;
+
+    router.replace(currentRoute, { locale: nextLocale });
   }
 
   return (

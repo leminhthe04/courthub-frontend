@@ -16,6 +16,7 @@ export interface IPartnerService {
   createVenue(dto: CreateVenueDto): Promise<VenueDetail>;
   createCourt(venueId: string, dto: CreateCourtDto): Promise<Court>;
   updateCourt(courtId: string, dto: UpdateCourtDto): Promise<Court>;
+  deleteCourt(courtId: string): Promise<Court>;
   transitionBooking(id: string, action: 'confirm' | 'reject'): Promise<PartnerBooking>;
   listPricingRules(venueId: string): Promise<VenuePricingRule[]>;
   createPricingRule(venueId: string, dto: CreateVenuePricingRuleDto): Promise<VenuePricingRule>;
@@ -44,6 +45,10 @@ export class PartnerService implements IPartnerService {
 
   updateCourt(courtId: string, dto: UpdateCourtDto): Promise<Court> {
     return this.client.patch<Court>(`/partner/venues/courts/${courtId}`, dto);
+  }
+
+  deleteCourt(courtId: string): Promise<Court> {
+    return this.client.delete<Court>(`/partner/venues/courts/${courtId}`);
   }
 
   transitionBooking(id: string, action: 'confirm' | 'reject'): Promise<PartnerBooking> {
