@@ -117,7 +117,6 @@ export type BookingResult = {
     status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
     totalAmount: number;
   };
-  guestToken: string | null;
 };
 
 export type CustomerBooking = {
@@ -137,7 +136,8 @@ export type PartnerBooking = {
   id: string;
   venueName: string;
   courtName: string;
-  guestName: string | null;
+  contactName: string;
+  contactEmail: string | null;
   contactPhone: string;
   startAt: string;
   endAt: string;
@@ -177,7 +177,8 @@ export type CreateBookingDto = {
   courtId: string;
   startAt: string;
   endAt: string;
-  guestName?: string;
+  contactName: string;
+  contactEmail?: string;
   contactPhone?: string;
   note?: string;
 };
