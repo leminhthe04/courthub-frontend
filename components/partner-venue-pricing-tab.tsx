@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { Pencil, Plus, X, Trash } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSetPricingRules } from '../hooks';
 import { formatCurrency, getLocalizedErrorMessage } from '../lib/formatters';
@@ -23,6 +24,15 @@ function copyRules(rules: VenuePricingRule[]) {
   }));
 }
 
+function formatPriceInput(value: string | number) {
+  const digits = String(value).replace(/\D/g, '');
+  return digits ? Number(digits).toLocaleString('en-US') : '';
+}
+
+function parsePriceInput(value: string) {
+  return Number(value.replace(/,/g, ''));
+}
+
 export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
   const locale = useLocale();
   const t = useTranslations('partnerDashboard');
@@ -32,6 +42,14 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
   const [newStart, setNewStart] = useState('05:00');
   const [newEnd, setNewEnd] = useState('11:00');
   const [newRate, setNewRate] = useState('150000');
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+  const [editStart, setEditStart] = useState('');
+  const [editEnd, setEditEnd] = useState('');
+  const [editRate, setEditRate] = useState('');
+  const [addingDay, setAddingDay] = useState<DayOfWeek | null>(null);
+  const [dayStart, setDayStart] = useState('05:00');
+  const [dayEnd, setDayEnd] = useState('11:00');
+  const [dayRate, setDayRate] = useState('150,000');
 
   useEffect(() => {
     // The server response is the source of truth after a successful save.
@@ -40,9 +58,28 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
   }, [venue.pricingRules]);
 
   const save = useSetPricingRules({
-    onSuccess: () => showToast.success(t('pricingRulesSaved')),
     onError: (error) => showToast.error(getLocalizedErrorMessage(error, tErrors)),
   });
+
+  const persistRules = (nextRules: typeof rules) => {
+    const previousRules = rules;
+    setRules(nextRules);
+    save.mutate(
+      {
+        venueId: venue.id,
+        rules: nextRules.map(({ dayOfWeek, startTime, endTime, hourlyRate }) => ({
+          dayOfWeek,
+          startTime,
+          endTime,
+          hourlyRate,
+        })),
+      },
+      {
+        onSuccess: () => showToast.success(t('pricingRulesSaved')),
+        onError: () => setRules(previousRules),
+      },
+    );
+  };
 
   const rulesByDay = useMemo(
     () =>
@@ -62,9 +99,10 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
 
   const addRule = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedDays.length || newStart >= newEnd || Number(newRate) < 0) return;
-    setRules((current) => [
-      ...current.filter(
+    const rate = parsePriceInput(newRate);
+    if (!selectedDays.length || newStart >= newEnd || Number.isNaN(rate) || rate < 0) return;
+    persistRules([
+      ...rules.filter(
         (rule) =>
           !(
             selectedDays.includes(rule.dayOfWeek) &&
@@ -77,13 +115,55 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
         dayOfWeek: day,
         startTime: newStart,
         endTime: newEnd,
-        hourlyRate: Number(newRate),
+        hourlyRate: rate,
       })),
     ]);
   };
 
-  const removeRule = (id: string) =>
-    setRules((current) => current.filter((rule) => rule.id !== id));
+  const removeRule = (id: string) => persistRules(rules.filter((rule) => rule.id !== id));
+
+  const addRuleForDay = (event: React.FormEvent, day: DayOfWeek) => {
+    event.preventDefault();
+    const rate = parsePriceInput(dayRate);
+    if (!dayStart || !dayEnd || dayStart >= dayEnd || Number.isNaN(rate) || rate < 0) return;
+
+    persistRules([
+      ...rules.filter(
+        (rule) =>
+          !(rule.dayOfWeek === day && rule.startTime === dayStart && rule.endTime === dayEnd),
+      ),
+      {
+        id: crypto.randomUUID(),
+        dayOfWeek: day,
+        startTime: dayStart,
+        endTime: dayEnd,
+        hourlyRate: rate,
+      },
+    ]);
+    setAddingDay(null);
+  };
+
+  const startEditing = (rule: (typeof rules)[number]) => {
+    setEditingRuleId(rule.id);
+    setEditStart(rule.startTime);
+    setEditEnd(rule.endTime);
+    setEditRate(formatPriceInput(rule.hourlyRate));
+  };
+
+  const cancelEditing = () => setEditingRuleId(null);
+
+  const saveEditing = (id: string) => {
+    const rate = parsePriceInput(editRate);
+    if (!editStart || !editEnd || editStart >= editEnd || Number.isNaN(rate) || rate < 0) return;
+    persistRules(
+      rules.map((rule) =>
+        rule.id === id
+          ? { ...rule, startTime: editStart, endTime: editEnd, hourlyRate: rate }
+          : rule,
+      ),
+    );
+    setEditingRuleId(null);
+  };
 
   return (
     <section className="mt-8 space-y-6">
@@ -92,29 +172,14 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
           <div>
             <h2 className="text-xl font-black text-slate-900">{t('pricingRulesTitle')}</h2>
           </div>
-          <button
-            type="button"
-            onClick={() =>
-              save.mutate({
-                venueId: venue.id,
-                rules: rules.map(({ dayOfWeek, startTime, endTime, hourlyRate }) => ({
-                  dayOfWeek,
-                  startTime,
-                  endTime,
-                  hourlyRate,
-                })),
-              })
-            }
-            disabled={save.isPending}
-            className="rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-60"
-          >
-            {save.isPending ? t('savingPricingRules') : t('savePricingRules')}
-          </button>
+          {save.isPending && (
+            <span className="text-sm font-semibold text-orange-600">{t('savingPricingRules')}</span>
+          )}
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[280px_1fr]">
           <form onSubmit={addRule} className="space-y-4 rounded-lg border border-slate-200 p-4">
-            <h3 className="font-black text-slate-900">{t('addPricingRule')}</h3>
+            <h3 className="font-black text-slate-900">{t('addSeriesPricingRule')}</h3>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs font-bold text-slate-700">
                 {t('startTime')}
@@ -143,11 +208,11 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
               {t('hourlyRate')}
               <input
                 required
-                type="number"
-                min="0"
-                step="1000"
-                value={newRate}
-                onChange={(event) => setNewRate(event.target.value)}
+                type="text"
+                inputMode="numeric"
+                value={formatPriceInput(newRate)}
+                onChange={(event) => setNewRate(formatPriceInput(event.target.value))}
+                onFocus={(event) => event.currentTarget.select()}
                 className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               />
             </label>
@@ -170,7 +235,7 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
               type="submit"
               className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-700"
             >
-              + {t('addPricingRule')}
+              + {t('add')}
             </button>
           </form>
 
@@ -180,30 +245,144 @@ export function PartnerVenuePricingTab({ venue }: PartnerVenuePricingTabProps) {
                 <div key={day} className="rounded-lg border border-slate-200 p-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                     <h3 className="font-black text-slate-900">{dayLabel(day)}</h3>
-                    <span className="text-xs text-slate-500">{rulesByDay[day].length}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        title={t('addPricingRule')}
+                        aria-label={`${t('addPricingRule')} - ${dayLabel(day)}`}
+                        onClick={() => setAddingDay((current) => (current === day ? null : day))}
+                        className="rounded-md p-1 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
+                  {addingDay === day && (
+                    <form
+                      onSubmit={(event) => addRuleForDay(event, day)}
+                      className="mt-3 space-y-2 rounded-md bg-orange-50 p-3"
+                    >
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          {t('startTime')}
+                          <input
+                            type="time"
+                            step="1800"
+                            value={dayStart}
+                            onChange={(event) => setDayStart(event.target.value)}
+                            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                          />
+                        </label>
+                        <label className="text-[11px] font-bold text-slate-700">
+                          {t('endTime')}
+                          <input
+                            type="time"
+                            step="1800"
+                            value={dayEnd}
+                            onChange={(event) => setDayEnd(event.target.value)}
+                            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                          />
+                        </label>
+                      </div>
+                      <label className="block text-[11px] font-bold text-slate-700">
+                        {t('hourlyRate')}
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={dayRate}
+                          onChange={(event) => setDayRate(formatPriceInput(event.target.value))}
+                          onFocus={(event) => event.currentTarget.select()}
+                          className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                        />
+                      </label>
+                      <button
+                        type="submit"
+                        className="w-full rounded-md bg-orange-500 px-2 py-1.5 text-xs font-bold text-white hover:bg-orange-600"
+                      >
+                        + {t('addPricingRule')}
+                      </button>
+                    </form>
+                  )}
                   <div className="mt-3 space-y-2">
                     {rulesByDay[day].length === 0 ? (
                       <p className="text-sm text-slate-400">{t('noPricingRules')}</p>
                     ) : (
                       rulesByDay[day].map((rule) => (
-                        <div
-                          key={rule.id}
-                          className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 text-sm"
-                        >
-                          <span className="font-bold">
-                            {rule.startTime.slice(0, 5)}-{rule.endTime.slice(0, 5)}
-                            <span className="block font-normal text-slate-500">
-                              {formatCurrency(rule.hourlyRate, locale)}/h
-                            </span>
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => removeRule(rule.id)}
-                            className="text-xs font-bold text-rose-600 hover:text-rose-800"
-                          >
-                            {t('deletePricingRule')}
-                          </button>
+                        <div key={rule.id} className="border-b border-slate-100 pb-2 text-sm">
+                          {editingRuleId === rule.id ? (
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="time"
+                                  step="1800"
+                                  value={editStart}
+                                  onChange={(event) => setEditStart(event.target.value)}
+                                  className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs"
+                                />
+                                <input
+                                  type="time"
+                                  step="1800"
+                                  value={editEnd}
+                                  onChange={(event) => setEditEnd(event.target.value)}
+                                  className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs"
+                                />
+                              </div>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={editRate}
+                                onChange={(event) =>
+                                  setEditRate(formatPriceInput(event.target.value))
+                                }
+                                onFocus={(event) => event.currentTarget.select()}
+                                className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs"
+                              />
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={cancelEditing}
+                                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold text-slate-500 hover:bg-slate-100"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                  {t('cancelEdit')}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => saveEditing(rule.id)}
+                                  className="rounded-md bg-orange-500 px-2 py-1 text-xs font-bold text-white hover:bg-orange-600"
+                                >
+                                  {t('saveEdit')}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold">
+                                {rule.startTime.slice(0, 5)}-{rule.endTime.slice(0, 5)}
+                                <span className="block font-normal text-slate-500">
+                                  {formatCurrency(rule.hourlyRate, locale)}/h
+                                </span>
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  title={t('editPricingRule')}
+                                  aria-label={`${t('editPricingRule')} - ${rule.startTime.slice(0, 5)}`}
+                                  onClick={() => startEditing(rule)}
+                                  className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removeRule(rule.id)}
+                                  className="text-xs font-bold text-rose-600 hover:text-rose-800"
+                                >
+                                  <Trash className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))
                     )}
