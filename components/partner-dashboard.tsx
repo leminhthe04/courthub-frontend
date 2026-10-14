@@ -329,19 +329,21 @@ export function PartnerDashboard() {
           )}
         </div>
 
-        {venues.isLoading ? (
-          <div className="mt-4 p-8 text-center text-slate-500">{tCommon('loading')}</div>
-        ) : venues.data && venues.data.length > 0 ? (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {venues.data.map((venue) => (
-              <PartnerVenueCard key={venue.id} venue={venue} />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-5 rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center">
-            <h3 className="font-bold text-slate-800">{t('noVenues')}</h3>
-          </div>
-        )}
+        <div className="relative mt-4 min-h-[24rem]">
+          {venues.isLoading ? (
+            <div className="p-8 text-center text-slate-500">{tCommon('loading')}</div>
+          ) : venues.data && venues.data.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {venues.data.map((venue) => (
+                <PartnerVenueCard key={venue.id} venue={venue} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center">
+              <h3 className="font-bold text-slate-800">{t('noVenues')}</h3>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

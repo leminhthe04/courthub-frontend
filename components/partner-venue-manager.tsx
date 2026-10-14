@@ -7,6 +7,7 @@ import { Link } from '../lib/i18n/routing';
 import { PartnerVenueCourtsTab } from './partner-venue-courts-tab';
 import { PartnerVenueOverviewTab } from './partner-venue-overview-tab';
 import { PartnerVenuePricingTab } from './partner-venue-pricing-tab';
+import { PartnerVenueBookingsTab } from './partner-venue-bookings-tab';
 
 interface PartnerVenueManagerProps {
   venueId: string;
@@ -17,7 +18,9 @@ export function PartnerVenueManager({ venueId }: PartnerVenueManagerProps) {
   const t = useTranslations('partnerDashboard');
   const tCommon = useTranslations('common');
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'courts' | 'pricing'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'courts' | 'pricing' | 'bookings'>(
+    'overview',
+  );
 
   const me = useCurrentUser();
   const isPartner = me.user?.role === 'PARTNER';
@@ -143,6 +146,18 @@ export function PartnerVenueManager({ venueId }: PartnerVenueManagerProps) {
 
         <button
           type="button"
+          onClick={() => setActiveTab('bookings')}
+          className={`flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition ${
+            activeTab === 'bookings'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          {t('tabBookings')}
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('courts')}
           className={`flex items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition cursor-pointer ${
             activeTab === 'courts'
@@ -176,6 +191,7 @@ export function PartnerVenueManager({ venueId }: PartnerVenueManagerProps) {
       {activeTab === 'overview' && <PartnerVenueOverviewTab venueId={venue.id} />}
       {activeTab === 'courts' && <PartnerVenueCourtsTab venue={venue} />}
       {activeTab === 'pricing' && <PartnerVenuePricingTab venue={venue} />}
+      {activeTab === 'bookings' && <PartnerVenueBookingsTab venueId={venue.id} />}
     </div>
   );
 }

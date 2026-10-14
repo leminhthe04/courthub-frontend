@@ -24,7 +24,7 @@ export function AdminUsersTab({
   const t = useTranslations('adminDashboard');
 
   return (
-    <section className="mt-8">
+    <section className="mt-8 min-h-[32rem]">
       <h2 className="text-2xl font-black text-slate-900">{t('usersTitle')}</h2>
       <div className="mt-4 overflow-x-auto rounded border border-slate-200 bg-white shadow-sm">
         <table className="w-full min-w-[800px] text-left text-sm">

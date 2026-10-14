@@ -26,7 +26,7 @@ export function SiteHeader() {
   const homeHref = isPartner ? '/partner' : isAdmin ? '/admin' : '/';
 
   return (
-    <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
         <Link
           href={homeHref}

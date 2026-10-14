@@ -18,7 +18,7 @@ export function AdminPartnerRequestsTab({
   const pending = requests.filter((request) => request.status === 'PENDING');
 
   return (
-    <section className="mt-8">
+    <section className="mt-8 min-h-[32rem]">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-2xl font-black text-slate-900">{t('partnerRequestsTitle')}</h2>
         <span className="rounded bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">

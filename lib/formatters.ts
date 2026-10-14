@@ -21,6 +21,17 @@ export function formatDate(value: string | Date, locale = 'vi'): string {
   }).format(new Date(value));
 }
 
+export function formatTimeRange(startAt: string | Date, endAt: string | Date): string {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  });
+
+  return `${formatter.format(new Date(startAt))} - ${formatter.format(new Date(endAt))}`;
+}
+
 export function formatSlotSummary(
   startAt: string | Date,
   endAt: string | Date,
