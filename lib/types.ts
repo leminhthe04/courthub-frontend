@@ -59,6 +59,13 @@ export type VenueSummary = {
   city: string;
   description: string | null;
   imageUrl: string | null;
+  createdAt: string;
+};
+
+export type VenueListResponse = {
+  items: VenueSummary[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
 };
 
 export type Court = {

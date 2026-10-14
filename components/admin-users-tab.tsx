@@ -34,7 +34,6 @@ export function AdminUsersTab({
               <th className="px-5 py-4">{t('userContact')}</th>
               <th className="px-5 py-4">{t('userRole')}</th>
               <th className="px-5 py-4">{t('userStatus')}</th>
-              <th className="px-5 py-4 text-right">{t('userActions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -80,9 +79,6 @@ export function AdminUsersTab({
                         {user.isActive ? t('activeStatus') : t('inactiveStatus')}
                       </span>
                     </div>
-                  </td>
-                  <td className="px-5 py-4 text-right text-xs text-slate-500">
-                    {isSelf ? t('currentUser') : ''}
                   </td>
                 </tr>
               );

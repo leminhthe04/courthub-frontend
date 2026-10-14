@@ -1,8 +1,8 @@
 import { httpClient, type IHttpClient } from '../http';
-import type { ScheduleResponse, VenueDetail, VenueFilterDto, VenueSummary } from '../types';
+import type { ScheduleResponse, VenueDetail, VenueFilterDto, VenueListResponse } from '../types';
 
 export interface IVenuesService {
-  listPublic(filter?: VenueFilterDto): Promise<VenueSummary[]>;
+  listPublic(filter?: VenueFilterDto, cursor?: string): Promise<VenueListResponse>;
   getPublic(id: string): Promise<VenueDetail>;
   getSchedule(venueId: string, date: string): Promise<ScheduleResponse>;
 }
@@ -10,15 +10,17 @@ export interface IVenuesService {
 export class VenuesService implements IVenuesService {
   constructor(private readonly client: IHttpClient = httpClient) {}
 
-  listPublic(filter?: VenueFilterDto): Promise<VenueSummary[]> {
+  listPublic(filter?: VenueFilterDto, cursor?: string): Promise<VenueListResponse> {
     const params = new URLSearchParams();
     if (filter?.search) params.set('search', filter.search);
     if (filter?.city) params.set('city', filter.city);
     if (filter?.sportType) params.set('sportType', filter.sportType);
+    params.set('limit', '12');
+    if (cursor) params.set('cursor', cursor);
 
     const queryString = params.toString();
     const endpoint = queryString ? `/venues?${queryString}` : '/venues';
-    return this.client.get<VenueSummary[]>(endpoint);
+    return this.client.get<VenueListResponse>(endpoint);
   }
 
   getPublic(id: string): Promise<VenueDetail> {

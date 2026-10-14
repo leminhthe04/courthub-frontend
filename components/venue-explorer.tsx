@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCategories, useVenues } from '../hooks';
 import { Link } from '../lib/i18n/routing';
 import { MoveRight } from 'lucide-react';
@@ -17,6 +17,33 @@ export function VenueExplorer() {
 
   const { data: categories } = useCategories();
   const venues = useVenues(submitted);
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = venues;
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const venueItems = useMemo(() => {
+    const seen = new Set<string>();
+    return (venues.data?.pages.flatMap((page) => page.items) ?? []).filter((venue) => {
+      if (seen.has(venue.id)) return false;
+      seen.add(venue.id);
+      return true;
+    });
+  }, [venues.data]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void fetchNextPage();
+        }
+      },
+      { rootMargin: '400px 0px' },
+    );
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <section className="mx-auto max-w-7xl px-5 pb-12">
@@ -78,7 +105,7 @@ export function VenueExplorer() {
           <h2 className="mt-2 text-3xl font-black tracking-tight">{t('title')}</h2>
         </div>
         <p className="hidden text-sm text-slate-500 sm:block">
-          {venues.data?.length ?? 0} {tCommon('all').toLowerCase()}
+          {venueItems.length} {tCommon('all').toLowerCase()}
         </p>
       </div>
 
@@ -92,14 +119,14 @@ export function VenueExplorer() {
           {tCommon('loading')}
         </div>
       )}
-      {!venues.isLoading && !venues.isError && venues.data?.length === 0 && (
+      {!venues.isLoading && !venues.isError && venueItems.length === 0 && (
         <div className="mt-8 border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
           {t('noVenues')}
         </div>
       )}
 
       <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {venues.data?.map((venue) => (
+        {venueItems.map((venue) => (
           <Link
             key={venue.id}
             href={`/venues/${venue.id}`}
@@ -139,6 +166,15 @@ export function VenueExplorer() {
           </Link>
         ))}
       </div>
+
+      {(hasNextPage || isFetchingNextPage) && (
+        <div ref={loadMoreRef} className="mt-8 min-h-10 text-center text-sm text-slate-500">
+          {t('loadingMore')}
+        </div>
+      )}
+      {!hasNextPage && venueItems.length > 0 && (
+        <p className="mt-8 text-center text-sm text-slate-400">{t('allLoaded')}</p>
+      )}
     </section>
   );
 }

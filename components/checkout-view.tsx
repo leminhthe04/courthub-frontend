@@ -9,6 +9,7 @@ import {
   calculateBookingPrice,
   formatCurrency,
   formatSlotSummary,
+  formatWeekday,
   getLocalizedErrorMessage,
   pricingRulesForDate,
 } from '../lib/formatters';
@@ -44,6 +45,11 @@ export function CheckoutView() {
     [venue.data, courtId],
   );
 
+  const selectedDatePricingRules = useMemo(
+    () => pricingRulesForDate(bookingDate, venue.data?.pricingRules),
+    [bookingDate, venue.data?.pricingRules],
+  );
+
   const durationMinutes = useMemo(() => {
     if (!startAt || !endAt) return 0;
     const start = new Date(startAt).getTime();
@@ -53,12 +59,8 @@ export function CheckoutView() {
 
   const total = useMemo(() => {
     if (!startAt || !endAt) return 0;
-    return calculateBookingPrice(
-      startAt,
-      endAt,
-      pricingRulesForDate(bookingDate, venue.data?.pricingRules),
-    );
-  }, [bookingDate, startAt, endAt, venue.data?.pricingRules]);
+    return calculateBookingPrice(startAt, endAt, selectedDatePricingRules);
+  }, [startAt, endAt, selectedDatePricingRules]);
 
   const createBooking = useCreateBooking({
     onSuccess: (result) => {
@@ -102,7 +104,7 @@ export function CheckoutView() {
         <p className="mt-2 text-sm text-slate-600">{t('noBookingInfoDesc')}</p>
         <Link
           href="/"
-          className="mt-6 inline-flex rounded-xl bg-slate-900 px-6 py-3 text-sm font-bold text-white hover:bg-slate-800 transition"
+          className="mt-6 inline-flex rounded bg-slate-900 px-6 py-3 text-sm font-bold text-white hover:bg-slate-800 transition"
         >
           {t('backToVenues')}
         </Link>
@@ -131,14 +133,14 @@ export function CheckoutView() {
       </div>
 
       {success ? (
-        <div className="mx-auto mt-8 max-w-xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+        <div className="mx-auto mt-8 max-w-xl rounded border border-slate-200 bg-white p-8 shadow-sm text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-600">
             <Check className="h-8 w-8" strokeWidth={3} aria-hidden="true" />
           </div>
           <h2 className="mt-5 text-2xl font-black text-slate-900">{t('successTitle')}</h2>
           <p className="mt-2 text-sm text-slate-600">{t('successSubtitle')}</p>
 
-          <div className="mt-6 rounded-xl bg-slate-50 p-4 border border-slate-100 text-left">
+          <div className="mt-6 rounded bg-slate-50 p-4 border border-slate-100 text-left">
             <div className="flex justify-between py-1 text-sm">
               <span className="text-slate-500">{t('bookingId')}</span>
               <strong className="font-mono text-slate-900 font-extrabold">
@@ -158,13 +160,13 @@ export function CheckoutView() {
           <div className="mt-8 flex flex-wrap gap-3 justify-center">
             <Link
               href={currentUser ? '/history' : '/'}
-              className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
+              className="rounded border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
             >
               {currentUser ? t('viewDashboard') : t('backToVenues')}
             </Link>
             <Link
               href={backUrl}
-              className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition"
+              className="rounded bg-slate-950 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition"
             >
               {t('bookAnother')}
             </Link>
@@ -174,11 +176,11 @@ export function CheckoutView() {
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
           {/* Main Checkout Form */}
           <div className="space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
+            <div className="rounded border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
               <h2 className="text-xl font-black text-slate-900">{t('contactInfo')}</h2>
 
               {!currentUser && (
-                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
+                <div className="mt-4 rounded border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
                   <span>{t('alreadyHaveAccount')} </span>
                   <Link
                     href={`/login?redirect=${encodeURIComponent(
@@ -201,7 +203,7 @@ export function CheckoutView() {
                     value={contactName ?? currentUser?.fullName ?? ''}
                     onChange={(e) => setContactName(e.target.value)}
                     placeholder={t('contactNamePlaceholder')}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 transition"
+                    className="mt-1.5 w-full rounded border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 transition"
                   />
                 </div>
 
@@ -214,7 +216,7 @@ export function CheckoutView() {
                     value={contactEmail ?? currentUser?.email ?? ''}
                     onChange={(e) => setContactEmail(e.target.value)}
                     placeholder={t('contactEmailPlaceholder')}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 transition"
+                    className="mt-1.5 w-full rounded border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 transition"
                   />
                 </div>
 
@@ -227,7 +229,7 @@ export function CheckoutView() {
                     value={contactPhone ?? currentUser?.phone ?? ''}
                     onChange={(e) => setContactPhone(e.target.value)}
                     placeholder={t('contactPhonePlaceholder')}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 transition"
+                    className="mt-1.5 w-full rounded border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 transition"
                   />
                 </div>
 
@@ -238,14 +240,14 @@ export function CheckoutView() {
                     onChange={(e) => setNote(e.target.value)}
                     placeholder={t('notePlaceholder')}
                     rows={3}
-                    className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 transition"
+                    className="mt-1.5 w-full resize-none rounded border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 transition"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={createBooking.isPending}
-                  className="mt-4 w-full cursor-pointer rounded-xl bg-emerald-600 px-6 py-4 text-base font-bold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60 transition"
+                  className="mt-4 w-full cursor-pointer rounded bg-emerald-600 px-6 py-4 text-base font-bold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60 transition"
                 >
                   {createBooking.isPending ? t('submitting') : t('submitBooking')}
                 </button>
@@ -255,7 +257,7 @@ export function CheckoutView() {
 
           {/* Order Summary Column (The moved aside) */}
           <aside className="space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="rounded border border-slate-200 bg-white p-6 shadow-xs">
               <h2 className="text-lg font-black text-slate-900">{t('orderSummary')}</h2>
 
               <div className="mt-4 border-b border-slate-100 pb-4">
@@ -279,14 +281,19 @@ export function CheckoutView() {
                     {t('time')}
                   </span>
                   <span className="mt-1 block font-extrabold text-slate-800 text-sm">
-                    {formatSlotSummary(startAt, endAt, durationMinutes, t('minutes'))}
+                    {formatSlotSummary(startAt, endAt, durationMinutes, t('minutes'), locale)}
                   </span>
                 </div>
 
-                {venue.data.pricingRules && venue.data.pricingRules.length > 0 && (
+                {selectedDatePricingRules.length > 0 && (
                   <div className="space-y-1 pt-2 border-t border-slate-100 text-xs text-slate-500">
-                    <span className="font-semibold block text-slate-700">Giá theo khung giờ:</span>
-                    {venue.data.pricingRules.map((rule) => (
+                    <span className="font-semibold block text-slate-700">
+                      {t('pricingBySlotForDay', {
+                        day: formatWeekday(bookingDate, locale),
+                      })}
+                      :
+                    </span>
+                    {selectedDatePricingRules.map((rule) => (
                       <div key={rule.id} className="flex justify-between">
                         <span>
                           {rule.startTime.slice(0, 5)} - {rule.endTime.slice(0, 5)}

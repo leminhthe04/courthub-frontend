@@ -6,13 +6,10 @@ import {
   useCategories,
   useCreatePartnerVenue,
   useCurrentUser,
-  usePartnerBookings,
   usePartnerVenues,
   useProvinces,
-  useTransitionBooking,
   useWards,
 } from '../hooks';
-import { formatDateTime } from '../lib/formatters';
 import { PartnerVenueCard } from './partner-venue-card';
 import { SearchableSelect } from './searchable-select';
 
@@ -41,7 +38,6 @@ export function PartnerDashboard() {
   const isPartner = me.user?.role === 'PARTNER';
 
   const venues = usePartnerVenues(isPartner);
-  const bookings = usePartnerBookings(isPartner);
 
   const createVenue = useCreatePartnerVenue({
     onSuccess: () => {
@@ -61,8 +57,6 @@ export function PartnerDashboard() {
     setSelectedWardCode('');
     setLocationError(null);
   };
-
-  const transition = useTransitionBooking();
 
   if (me.isLoading) {
     return <div className="mx-auto max-w-7xl px-5 py-16 text-slate-500">{tCommon('loading')}</div>;
@@ -348,57 +342,6 @@ export function PartnerDashboard() {
             <h3 className="font-bold text-slate-800">{t('noVenues')}</h3>
           </div>
         )}
-      </section>
-
-      {/* Pending Bookings Section */}
-      <section className="mt-12">
-        <h2 className="text-2xl font-black text-slate-950">{t('pendingBookings')}</h2>
-        <div className="mt-4 grid gap-3">
-          {bookings.data?.filter((item) => item.status === 'PENDING').length === 0 && (
-            <div className="rounded border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-              {t('noPending')}
-            </div>
-          )}
-          {bookings.data
-            ?.filter((item) => item.status === 'PENDING')
-            .map((booking) => (
-              <article
-                key={booking.id}
-                className="flex flex-col justify-between gap-4 rounded border border-slate-200 bg-white p-5 sm:flex-row sm:items-center shadow-sm"
-              >
-                <div>
-                  <h3 className="font-bold text-slate-900">
-                    {booking.venueName} · {booking.courtName}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {formatDateTime(booking.startAt, locale)} →{' '}
-                    {formatDateTime(booking.endAt, locale)}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {booking.contactName} · {booking.contactPhone}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => transition.mutate({ id: booking.id, action: 'reject' })}
-                    disabled={transition.isPending}
-                    className="cursor-pointer rounded border border-rose-200 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 transition"
-                  >
-                    {t('reject')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => transition.mutate({ id: booking.id, action: 'confirm' })}
-                    disabled={transition.isPending}
-                    className="cursor-pointer rounded bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 transition"
-                  >
-                    {t('approve')}
-                  </button>
-                </div>
-              </article>
-            ))}
-        </div>
       </section>
     </div>
   );
