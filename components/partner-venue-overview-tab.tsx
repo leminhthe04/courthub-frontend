@@ -22,8 +22,8 @@ export function PartnerVenueOverviewTab({ venueId }: PartnerVenueOverviewTabProp
   const schedule = useVenueSchedule(venueId, overviewDate, true);
 
   return (
-    <section className="mt-8 space-y-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="mt-8 min-h-[32rem] space-y-6">
+      <div className="rounded border border-slate-200 bg-white p-6 shadow-sm">
         <div className="border-b border-slate-100 pb-4">
           <h2 className="text-xl font-black text-slate-900">{t('overviewTitle')}</h2>
         </div>

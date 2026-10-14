@@ -59,6 +59,13 @@ export type VenueSummary = {
   city: string;
   description: string | null;
   imageUrl: string | null;
+  createdAt: string;
+};
+
+export type VenueListResponse = {
+  items: VenueSummary[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
 };
 
 export type Court = {
@@ -126,6 +133,7 @@ export type CustomerBooking = {
   courtName: string;
   venueId: string;
   venueName: string;
+  venueAddress: string;
   startAt: string;
   endAt: string;
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
@@ -135,6 +143,7 @@ export type CustomerBooking = {
 
 export type PartnerBooking = {
   id: string;
+  venueId: string;
   venueName: string;
   courtName: string;
   contactName: string;
@@ -154,7 +163,9 @@ export type AdminBooking = {
   id: string;
   venueName: string;
   courtName: string;
+  contactName: string;
   contactPhone: string;
+  contactEmail: string | null;
   startAt: string;
   endAt: string;
   status: string;

@@ -21,11 +21,23 @@ export function formatDate(value: string | Date, locale = 'vi'): string {
   }).format(new Date(value));
 }
 
+export function formatTimeRange(startAt: string | Date, endAt: string | Date): string {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  });
+
+  return `${formatter.format(new Date(startAt))} - ${formatter.format(new Date(endAt))}`;
+}
+
 export function formatSlotSummary(
   startAt: string | Date,
   endAt: string | Date,
   durationMinutes: number | null,
   minuteUnit: string | null,
+  locale?: string,
 ): string {
   const start = new Date(startAt);
   const end = new Date(endAt);
@@ -48,10 +60,41 @@ export function formatSlotSummary(
   const endTime = timeFormatter.format(end);
 
   const timeRange = `${startTime}-${endTime}`;
+  const weekday = locale ? `${formatWeekday(start, locale)}-` : '';
   const duration =
     durationMinutes !== null && minuteUnit !== null ? ` -- ${durationMinutes} ${minuteUnit}` : '';
 
-  return `${timeRange} -- ${dateStr}${duration}`;
+  return `${timeRange} -- ${weekday}${dateStr}${duration}`;
+}
+
+export function formatWeekday(value: string | Date, locale = 'vi'): string {
+  const date =
+    typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? new Date(`${value}T12:00:00+07:00`)
+      : new Date(value);
+
+  if (locale !== 'vi') {
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    }).format(date);
+  }
+
+  const day = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  }).format(date);
+  const shortNames: Record<string, string> = {
+    Sun: 'Chủ nhật',
+    Mon: 'Thứ 2',
+    Tue: 'Thứ 3',
+    Wed: 'Thứ 4',
+    Thu: 'Thứ 5',
+    Fri: 'Thứ 6',
+    Sat: 'Thứ 7',
+  };
+
+  return shortNames[day] ?? day;
 }
 
 export function calculateBookingPrice(

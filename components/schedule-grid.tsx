@@ -452,7 +452,7 @@ export function ScheduleGrid({
       )}
 
       {schedule.venue.pricingRules && schedule.venue.pricingRules.length > 0 && (
-        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-xs">
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded border border-slate-200 bg-slate-50 p-2.5 text-xs">
           <span className="font-bold text-slate-700">
             {locale === 'vi' ? 'Bảng giá theo giờ:' : 'Hourly Pricing:'}
           </span>
@@ -472,7 +472,7 @@ export function ScheduleGrid({
 
       <div
         ref={scrollContainerRef}
-        className="overflow-x-auto border border-slate-200 bg-white shadow-sm select-none"
+        className="overflow-x-auto rounded border border-slate-200 bg-white shadow-sm select-none"
       >
         <div
           className="min-w-max"
