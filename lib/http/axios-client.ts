@@ -1,7 +1,6 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { ApiError } from './api-error';
 import type { HttpRequestConfig, IHttpClient } from './http-client.interface';
-import { clearSessionHint } from './session-cookie';
 
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? 'http://fakedomain:1111/api'
@@ -37,14 +36,18 @@ export class AxiosHttpClient implements IHttpClient {
       (response) => response,
       async (error: AxiosError<{ message?: string | string[]; code?: string }>) => {
         const originalRequest = error.config as RetriableRequestConfig | undefined;
+        const requestUrl = originalRequest?.url ?? '';
+        const shouldSkipRefresh =
+          requestUrl.includes('/auth/login') ||
+          requestUrl.includes('/auth/register') ||
+          requestUrl.includes('/auth/refresh') ||
+          requestUrl.includes('/auth/me');
 
         if (
           error.response?.status === 401 &&
           originalRequest &&
           !originalRequest._retry &&
-          !originalRequest.url?.includes('/auth/login') &&
-          !originalRequest.url?.includes('/auth/register') &&
-          !originalRequest.url?.includes('/auth/refresh')
+          !shouldSkipRefresh
         ) {
           if (this.isRefreshing) {
             return new Promise<void>((resolve, reject) => {
@@ -63,7 +66,6 @@ export class AxiosHttpClient implements IHttpClient {
             return await this.client(originalRequest);
           } catch (refreshError) {
             this.processQueue(refreshError);
-            clearSessionHint();
             return Promise.reject(this.formatError(refreshError as AxiosError));
           } finally {
             this.isRefreshing = false;
