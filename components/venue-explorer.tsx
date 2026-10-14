@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCategories, useVenues } from '../hooks';
 import { Link } from '../lib/i18n/routing';
 import { MoveRight } from 'lucide-react';
@@ -17,6 +17,33 @@ export function VenueExplorer() {
 
   const { data: categories } = useCategories();
   const venues = useVenues(submitted);
+  const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } = venues;
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const venueItems = useMemo(() => {
+    const seen = new Set<string>();
+    return (venues.data?.pages.flatMap((page) => page.items) ?? []).filter((venue) => {
+      if (seen.has(venue.id)) return false;
+      seen.add(venue.id);
+      return true;
+    });
+  }, [venues.data]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void fetchNextPage();
+        }
+      },
+      { rootMargin: '400px 0px' },
+    );
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <section className="mx-auto max-w-7xl px-5 pb-12">
@@ -78,67 +105,84 @@ export function VenueExplorer() {
           <h2 className="mt-2 text-3xl font-black tracking-tight">{t('title')}</h2>
         </div>
         <p className="hidden text-sm text-slate-500 sm:block">
-          {venues.data?.length ?? 0} {tCommon('all').toLowerCase()}
+          {venueItems.length} {tCommon('all').toLowerCase()}
         </p>
       </div>
 
-      {venues.isLoading && (
-        <div className="mt-8 border border-slate-200 bg-white p-8 text-slate-500">
-          {tCommon('loading')}
-        </div>
-      )}
-      {venues.isError && (
-        <div className="mt-8 border border-amber-200 bg-amber-50 p-6 text-amber-900">
-          {tCommon('loading')}
-        </div>
-      )}
-      {!venues.isLoading && !venues.isError && venues.data?.length === 0 && (
-        <div className="mt-8 border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
-          {t('noVenues')}
-        </div>
-      )}
+      <div className="relative mt-8 min-h-[32rem]">
+        {venues.isLoading && (
+          <div className="border border-slate-200 bg-white p-8 text-slate-500">
+            {tCommon('loading')}
+          </div>
+        )}
+        {venues.isError && (
+          <div className="border border-amber-200 bg-amber-50 p-6 text-amber-900">
+            {tCommon('loading')}
+          </div>
+        )}
+        {!venues.isLoading && !venues.isError && venueItems.length === 0 && (
+          <div className="border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+            {t('noVenues')}
+          </div>
+        )}
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {venues.data?.map((venue) => (
-          <Link
-            key={venue.id}
-            href={`/venues/${venue.id}`}
-            className="group flex h-full flex-col overflow-hidden rounded border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-xl"
-          >
-            <div
-              className="relative h-40 overflow-hidden bg-linear-to-br from-emerald-400 via-teal-500 to-slate-900"
-              style={
-                venue.imageUrl
-                  ? {
-                      backgroundImage: `url(${venue.imageUrl})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }
-                  : undefined
-              }
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {venueItems.map((venue) => (
+            <Link
+              key={venue.id}
+              href={`/venues/${venue.id}`}
+              className="group flex h-full flex-col overflow-hidden rounded border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-xl"
             >
-              {venue.imageUrl && (
-                <div className="absolute inset-0 bg-slate-950/25 transition group-hover:bg-slate-950/10" />
-              )}
-              <span className="rounded absolute left-4 top-4 bg-white/90 px-3 py-1 text-xs font-bold text-slate-800">
-                {venue.sportType}
-              </span>
-            </div>
-            <div className="flex flex-1 flex-col p-5">
-              <h3 className="text-xl font-bold group-hover:text-emerald-600">{venue.name}</h3>
-              <p className="mt-2 text-sm text-slate-500">
-                {venue.address}, {venue.city}
-              </p>
-              <p className="mt-4 line-clamp-2 text-sm leading-6 text-slate-600">
-                {venue.description ?? ''}
-              </p>
-              <span className="mt-auto inline-flex pt-5 text-sm font-bold text-emerald-600">
-                {t('viewDetails')} <MoveRight className="ml-2 h-5 w-4" />
-              </span>
-            </div>
-          </Link>
-        ))}
+              <div
+                className="relative h-40 overflow-hidden bg-linear-to-br from-emerald-400 via-teal-500 to-slate-900"
+                style={
+                  venue.imageUrl
+                    ? {
+                        backgroundImage: `url(${venue.imageUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }
+                    : undefined
+                }
+              >
+                {venue.imageUrl && (
+                  <div className="absolute inset-0 bg-slate-950/25 transition group-hover:bg-slate-950/10" />
+                )}
+                <span className="absolute left-4 top-4 rounded bg-white/90 px-3 py-1 text-xs font-bold text-slate-800">
+                  {venue.sportType}
+                </span>
+              </div>
+              <div className="flex flex-1 flex-col p-5">
+                <h3 className="text-xl font-bold group-hover:text-emerald-600">{venue.name}</h3>
+                <p className="mt-2 text-sm text-slate-500">
+                  {venue.address}, {venue.city}
+                </p>
+                <p className="mt-4 line-clamp-2 text-sm leading-6 text-slate-600">
+                  {venue.description ?? ''}
+                </p>
+                <span className="mt-auto inline-flex pt-5 text-sm font-bold text-emerald-600">
+                  {t('viewDetails')} <MoveRight className="ml-2 h-5 w-4" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {isFetching && !isFetchingNextPage && (
+          <div className="pointer-events-none absolute inset-0 flex items-start justify-center bg-white/45 pt-4 text-sm font-bold text-slate-600">
+            <span className="rounded bg-white px-4 py-2 shadow-sm">{tCommon('loading')}</span>
+          </div>
+        )}
       </div>
+
+      {(hasNextPage || isFetchingNextPage) && (
+        <div ref={loadMoreRef} className="mt-8 min-h-10 text-center text-sm text-slate-500">
+          {t('loadingMore')}
+        </div>
+      )}
+      {!hasNextPage && venueItems.length > 0 && (
+        <p className="mt-8 text-center text-sm text-slate-400">{t('allLoaded')}</p>
+      )}
     </section>
   );
 }

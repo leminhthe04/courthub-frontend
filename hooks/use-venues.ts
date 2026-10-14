@@ -1,4 +1,9 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { venuesService } from '../lib/services';
 import type { VenueFilterDto } from '../lib/types';
@@ -25,9 +30,12 @@ export interface UseVenueScheduleOptions {
 }
 
 export function useVenues(filter: VenueFilterDto) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: VENUE_KEYS.list(filter),
-    queryFn: () => venuesService.listPublic(filter),
+    queryFn: ({ pageParam }) => venuesService.listPublic(filter, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    placeholderData: keepPreviousData,
   });
 }
 

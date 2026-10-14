@@ -24,7 +24,7 @@ export function AdminUsersTab({
   const t = useTranslations('adminDashboard');
 
   return (
-    <section className="mt-8">
+    <section className="mt-8 min-h-[32rem]">
       <h2 className="text-2xl font-black text-slate-900">{t('usersTitle')}</h2>
       <div className="mt-4 overflow-x-auto rounded border border-slate-200 bg-white shadow-sm">
         <table className="w-full min-w-[800px] text-left text-sm">
@@ -34,7 +34,6 @@ export function AdminUsersTab({
               <th className="px-5 py-4">{t('userContact')}</th>
               <th className="px-5 py-4">{t('userRole')}</th>
               <th className="px-5 py-4">{t('userStatus')}</th>
-              <th className="px-5 py-4 text-right">{t('userActions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -80,9 +79,6 @@ export function AdminUsersTab({
                         {user.isActive ? t('activeStatus') : t('inactiveStatus')}
                       </span>
                     </div>
-                  </td>
-                  <td className="px-5 py-4 text-right text-xs text-slate-500">
-                    {isSelf ? t('currentUser') : ''}
                   </td>
                 </tr>
               );

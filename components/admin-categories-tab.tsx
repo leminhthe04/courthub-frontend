@@ -61,7 +61,7 @@ export function AdminCategoriesTab({
   const tCommon = useTranslations('common');
 
   return (
-    <section className="mt-8 space-y-6">
+    <section className="mt-8 min-h-[32rem] space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="text-2xl font-black text-slate-900">{t('categoriesTitle')}</h2>
