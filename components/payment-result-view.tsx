@@ -78,9 +78,6 @@ export function PaymentResultView({
       <h1 className="text-3xl font-black text-slate-900">
         {error ? t('paymentStatusError') : title}
       </h1>
-      <p className="mt-3 text-sm text-slate-600">
-        {payment?.status === 'PAID' ? t('paymentSuccessSubtitle') : t('paymentPendingSubtitle')}
-      </p>
       {payment && <p className="mt-5 font-bold text-emerald-700">{payment.status}</p>}
       {payment && <PaymentBookingSummary payment={payment} />}
       {terminal && (

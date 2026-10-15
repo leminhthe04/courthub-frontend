@@ -56,7 +56,10 @@ export type VenueSummary = {
   categoryName?: string;
   categorySlug?: string;
   address: string;
-  city: string;
+  ward: string;
+  province: string;
+  wardCode: string;
+  provinceCode: string;
   description: string | null;
   imageUrl: string | null;
   createdAt: string;
@@ -246,9 +249,14 @@ export type CreateVenueDto = {
   name: string;
   sportType?: string;
   address: string;
-  city: string;
+  province: string;
+  ward: string;
+  wardCode: string;
+  provinceCode: string;
   description?: string;
 };
+
+export type UpdateVenueDto = Partial<CreateVenueDto>;
 
 export type CreateCourtDto = {
   name: string;

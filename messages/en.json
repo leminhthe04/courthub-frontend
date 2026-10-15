@@ -137,7 +137,6 @@
     "paymentSuccessTitle": "Payment successful",
     "paymentSuccessSubtitle": "Your booking has been confirmed.",
     "paymentPendingTitle": "Payment processing",
-    "paymentPendingSubtitle": "We are waiting for PayOS to confirm your payment.",
     "paymentFailedTitle": "Payment was not completed",
     "paymentStatusError": "Unable to check payment status",
     "backToSchedule": "Back to schedule",
@@ -305,6 +304,10 @@
     "copyFrom": "Copy from",
     "copyToSelectedDays": "Copy to selected days",
     "bookedAt": "Booked at:",
+    "tabDetails": "Venue Details",
+    "venueDetailsTitle": "Venue Details",
+    "venueDetailsSubtitle": "Update the information customers see for this venue.",
+    "venueUpdated": "Venue details updated successfully!",
     "days": {
       "MON": "Monday",
       "TUE": "Tuesday",

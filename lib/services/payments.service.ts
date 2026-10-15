@@ -15,7 +15,13 @@ export type PaymentStatus = {
   endAt?: string;
   createdAt?: string;
   court?: { id: string; name: string };
-  venue?: { id: string; name: string; address: string; city: string };
+  venue?: {
+    id: string;
+    name: string;
+    address: string;
+    ward: string;
+    province: string;
+  };
 };
 
 export const paymentsService = {

@@ -266,7 +266,7 @@ export function CheckoutView() {
                 </span>
                 <h3 className="mt-2 text-lg font-black text-slate-900">{venue.data.name}</h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  {venue.data.address}, {venue.data.city}
+                  {venue.data.address}, {venue.data.ward}, {venue.data.province}
                 </p>
               </div>
 

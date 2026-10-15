@@ -143,7 +143,7 @@ export function VenueExplorer() {
               <div className="flex flex-1 flex-col p-5">
                 <h3 className="text-xl font-bold group-hover:text-emerald-600">{venue.name}</h3>
                 <p className="mt-2 text-sm text-slate-500">
-                  {venue.address}, {venue.city}
+                  {venue.address}, {venue.ward}, {venue.province}
                 </p>
                 <p className="mt-4 line-clamp-2 text-sm leading-6 text-slate-600">
                   {venue.description ?? ''}

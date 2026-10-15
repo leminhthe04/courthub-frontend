@@ -6,6 +6,7 @@ import type {
   CreateVenuePricingRuleDto,
   PartnerBooking,
   UpdateCourtDto,
+  UpdateVenueDto,
   VenueDetail,
   VenuePricingRule,
 } from '../types';
@@ -14,6 +15,7 @@ export interface IPartnerService {
   listVenues(): Promise<VenueDetail[]>;
   listBookings(): Promise<PartnerBooking[]>;
   createVenue(dto: CreateVenueDto): Promise<VenueDetail>;
+  updateVenue(venueId: string, dto: UpdateVenueDto): Promise<VenueDetail>;
   createCourt(venueId: string, dto: CreateCourtDto): Promise<Court>;
   updateCourt(courtId: string, dto: UpdateCourtDto): Promise<Court>;
   deleteCourt(courtId: string): Promise<Court>;
@@ -37,6 +39,10 @@ export class PartnerService implements IPartnerService {
 
   createVenue(dto: CreateVenueDto): Promise<VenueDetail> {
     return this.client.post<VenueDetail>('/partner/venues', dto);
+  }
+
+  updateVenue(venueId: string, dto: UpdateVenueDto): Promise<VenueDetail> {
+    return this.client.patch<VenueDetail>(`/partner/venues/${venueId}`, dto);
   }
 
   createCourt(venueId: string, dto: CreateCourtDto): Promise<Court> {

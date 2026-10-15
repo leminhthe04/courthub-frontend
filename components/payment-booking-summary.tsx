@@ -26,7 +26,7 @@ export function PaymentBookingSummary({ payment }: { payment: PaymentStatus }) {
           <dt className="font-bold text-slate-500">{t('venue')}</dt>
           <dd className="mt-1 font-semibold text-slate-900">{payment.venue.name}</dd>
           <dd className="text-slate-600">
-            {payment.venue.address}, {payment.venue.city}
+            {payment.venue.address}, {payment.venue.ward}, {payment.venue.province}
           </dd>
         </div>
         <div>

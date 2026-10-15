@@ -134,7 +134,7 @@ export function VenueBooking({ venueId }: { venueId: string }) {
                 </span>
                 <h1 className="mt-4 text-4xl font-black tracking-tight">{venue.data.name}</h1>
                 <p className="mt-3 text-slate-300">
-                  {venue.data.address}, {venue.data.city}
+                  {venue.data.address}, {venue.data.ward}, {venue.data.province}
                 </p>
               </div>
               <div className="bg-white/10 px-5 py-4 text-right text-sm text-slate-300">
@@ -159,7 +159,7 @@ export function VenueBooking({ venueId }: { venueId: string }) {
                   {venue.data.name}
                 </h1>
                 <p className="mt-1 text-sm text-slate-500">
-                  {venue.data.address}, {venue.data.city}
+                  {venue.data.address}, {venue.data.ward}, {venue.data.province}
                 </p>
                 {venue.data.description && (
                   <p className="mt-2 max-w-3xl text-sm text-slate-600">{venue.data.description}</p>

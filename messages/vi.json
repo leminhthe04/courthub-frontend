@@ -137,7 +137,6 @@
     "paymentSuccessTitle": "Thanh toán thành công",
     "paymentSuccessSubtitle": "Lịch đặt sân của bạn đã được xác nhận.",
     "paymentPendingTitle": "Đang xử lý thanh toán",
-    "paymentPendingSubtitle": "Hệ thống đang chờ PayOS xác nhận giao dịch.",
     "paymentFailedTitle": "Thanh toán chưa hoàn tất",
     "paymentStatusError": "Không thể kiểm tra trạng thái thanh toán",
     "backToSchedule": "Quay lại chọn giờ sân",
@@ -306,6 +305,10 @@
     "copyFrom": "Sao chép từ",
     "copyToSelectedDays": "Sao chép sang ngày đã chọn",
     "bookedAt": "Đặt lúc: ",
+    "tabDetails": "Thông tin cơ sở",
+    "venueDetailsTitle": "Thông tin cơ sở",
+    "venueDetailsSubtitle": "Cập nhật thông tin khách hàng nhìn thấy về cơ sở này.",
+    "venueUpdated": "Đã cập nhật thông tin cơ sở!",
     "days": {
       "MON": "Thứ 2",
       "TUE": "Thứ 3",
