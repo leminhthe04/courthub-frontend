@@ -35,7 +35,7 @@ export function CheckoutView() {
   const [contactEmail, setContactEmail] = useState<string | null>(null);
   const [contactPhone, setContactPhone] = useState<string | null>(null);
   const [note, setNote] = useState('');
-  const [success, setSuccess] = useState<BookingResult | null>(null);
+  const [success] = useState<BookingResult | null>(null);
 
   const { user: currentUser } = useCurrentUser();
   const venue = useVenueDetail(venueId);
@@ -64,7 +64,7 @@ export function CheckoutView() {
 
   const createBooking = useCreateBooking({
     onSuccess: (result) => {
-      setSuccess(result);
+      window.location.assign(result.payment.checkoutUrl);
       if (venueId && bookingDate) {
         clearVenueBookingSelection(venueId, bookingDate);
       }
@@ -266,7 +266,7 @@ export function CheckoutView() {
                 </span>
                 <h3 className="mt-2 text-lg font-black text-slate-900">{venue.data.name}</h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  {venue.data.address}, {venue.data.city}
+                  {venue.data.address}, {venue.data.ward}, {venue.data.province}
                 </p>
               </div>
 

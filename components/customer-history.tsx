@@ -8,10 +8,16 @@ import {
   groupBookingsByDate,
   type BookingDateFilter as BookingDateFilterValue,
 } from '../lib/booking-filters';
-import { formatCurrency, formatTimeRange, getLocalizedErrorMessage } from '../lib/formatters';
+import {
+  formatDateTime,
+  formatCurrency,
+  formatTimeRange,
+  getLocalizedErrorMessage,
+} from '../lib/formatters';
 import { Link, useRouter } from '../lib/i18n/routing';
 import { BookingDateFilter } from './booking-date-filter';
-import { ScrollableBookingList } from './scrollable-booking-list';
+import { BookingStatusBadge } from './booking-status-badge';
+import { PendingPaymentActions } from './pending-payment-actions';
 
 export function CustomerHistory() {
   const locale = useLocale();
@@ -82,53 +88,49 @@ export function CustomerHistory() {
           </Link>
         </div>
       )}
-      <ScrollableBookingList>
-        <div className="space-y-8">
-          {groups.map((group) => (
-            <section key={group.date}>
-              <h2 className="mb-3 text-lg font-black text-slate-900">{group.label}</h2>
-              <div className="grid gap-4">
-                {group.items.map((booking) => (
-                  <article
-                    key={booking.id}
-                    className="flex flex-col justify-between gap-5 rounded border border-slate-200 bg-white px-5 py-3 shadow-sm sm:flex-row sm:items-center"
-                  >
-                    <div>
-                      <h3 className="text-lg font-bold">
-                        {booking.venueName} · {booking.courtName} --{' '}
-                        {formatTimeRange(booking.startAt, booking.endAt)}
-                      </h3>
-                      <p className="mt-2 text-sm text-slate-600">{booking.venueAddress}</p>
-                    </div>
-                    <div className="text-left sm:text-right">
-                      <span
-                        className={`rounded px-3 py-1 text-xs font-bold ${
-                          booking.status === 'CONFIRMED'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : booking.status === 'PENDING'
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {booking.status === 'CONFIRMED'
-                          ? tCommon('status.confirmed')
-                          : booking.status === 'PENDING'
-                            ? tCommon('status.pending')
-                            : booking.status === 'CANCELLED'
-                              ? tCommon('status.cancelled')
-                              : booking.status}
-                      </span>
-                      <p className="mt-3 font-bold text-slate-950">
+      <div className="mt-8 space-y-8">
+        {groups.map((group) => (
+          <section key={group.date}>
+            <h2 className="mb-3 text-lg font-black text-slate-900">{group.label}</h2>
+            <div className="grid gap-4">
+              {group.items.map((booking) => (
+                <article
+                  key={booking.id}
+                  className="flex flex-col justify-between gap-5 rounded border border-slate-200 bg-white px-5 py-3 shadow-sm sm:flex-row sm:items-center"
+                >
+                  <div>
+                    <h3 className="text-lg font-bold">
+                      {booking.venueName} · {booking.courtName} --{' '}
+                      {formatTimeRange(booking.startAt, booking.endAt)}
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-600">{booking.venueAddress}</p>
+                    <p className="mt-2 text-xs text-slate-500">
+                      {t('bookedAt') + formatDateTime(booking.createdAt)}
+                    </p>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <BookingStatusBadge status={booking.status} translate={tCommon} />
+                    <div className="mt-3 flex items-center justify-end gap-3">
+                      {booking.status === 'AWAITING_PAYMENT' &&
+                        booking.paymentStatus === 'PENDING' &&
+                        booking.paymentId &&
+                        booking.paymentExpiresAt && (
+                          <PendingPaymentActions
+                            paymentId={booking.paymentId}
+                            expiresAt={booking.paymentExpiresAt}
+                          />
+                        )}
+                      <p className="font-bold text-slate-950">
                         {formatCurrency(booking.totalAmount, locale)}
                       </p>
                     </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      </ScrollableBookingList>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </div>
   );
 }

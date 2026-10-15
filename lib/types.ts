@@ -56,7 +56,10 @@ export type VenueSummary = {
   categoryName?: string;
   categorySlug?: string;
   address: string;
-  city: string;
+  ward: string;
+  province: string;
+  wardCode: string;
+  provinceCode: string;
   description: string | null;
   imageUrl: string | null;
   createdAt: string;
@@ -122,8 +125,16 @@ export type BookingResult = {
     courtId: string;
     startAt: string;
     endAt: string;
-    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
+    status: 'PENDING' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
     totalAmount: number;
+  };
+  payment: {
+    id: string;
+    bookingId: string;
+    status: 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
+    amount: number;
+    checkoutUrl: string;
+    expiresAt: string;
   };
 };
 
@@ -136,10 +147,16 @@ export type CustomerBooking = {
   venueAddress: string;
   startAt: string;
   endAt: string;
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
+  status: 'PENDING' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
   totalAmount: number;
   createdAt: string;
+  paymentId: string | null;
+  paymentStatus: PaymentStatus | null;
+  paymentCheckoutUrl: string | null;
+  paymentExpiresAt: string | null;
 };
+
+export type PaymentStatus = 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
 
 export type PartnerBooking = {
   id: string;
@@ -151,6 +168,7 @@ export type PartnerBooking = {
   contactPhone: string;
   startAt: string;
   endAt: string;
+  createdAt: string;
   status: string;
   totalAmount: number;
 };
@@ -223,9 +241,7 @@ export type CreateBookingDto = {
 
 export type VenueFilterDto = {
   search?: string;
-  city?: string;
   categoryId?: string;
-  sportType?: string;
 };
 
 export type CreateVenueDto = {
@@ -233,9 +249,14 @@ export type CreateVenueDto = {
   name: string;
   sportType?: string;
   address: string;
-  city: string;
+  province: string;
+  ward: string;
+  wardCode: string;
+  provinceCode: string;
   description?: string;
 };
+
+export type UpdateVenueDto = Partial<CreateVenueDto>;
 
 export type CreateCourtDto = {
   name: string;

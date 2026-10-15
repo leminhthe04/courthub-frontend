@@ -37,7 +37,7 @@ export function PartnerVenueCard({ venue }: PartnerVenueCardProps) {
         {/* Venue Info */}
         <h3 className="mt-3 text-lg font-black text-slate-900">{venue.name}</h3>
         <p className="mt-1 text-sm text-slate-500">
-          {venue.address}, {venue.city}
+          {venue.address}, {venue.ward}, {venue.province}
         </p>
         {venue.description && (
           <p className="mt-2 line-clamp-2 text-xs text-slate-600">{venue.description}</p>

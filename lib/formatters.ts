@@ -6,13 +6,13 @@ export function formatCurrency(amount: number, locale = 'vi'): string {
   return locale === 'vi' ? `${formattedNumber}đ` : `${formattedNumber} VND`;
 }
 
-export function formatDateTime(value: string | Date, locale = 'vi'): string {
-  return new Intl.DateTimeFormat(locale === 'vi' ? 'vi-VN' : 'en-GB', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-    timeZone: 'Asia/Ho_Chi_Minh',
-  }).format(new Date(value));
-}
+// export function formatDateTime(value: string | Date, locale = 'vi'): string {
+//   return new Intl.DateTimeFormat(locale === 'vi' ? 'vi-VN' : 'en-GB', {
+//     dateStyle: 'short',
+//     timeStyle: 'short',
+//     timeZone: 'Asia/Ho_Chi_Minh',
+//   }).format(new Date(value));
+// }
 
 export function formatDate(value: string | Date, locale = 'vi'): string {
   return new Intl.DateTimeFormat(locale === 'vi' ? 'vi-VN' : 'en-GB', {
@@ -30,6 +30,26 @@ export function formatTimeRange(startAt: string | Date, endAt: string | Date): s
   });
 
   return `${formatter.format(new Date(startAt))} - ${formatter.format(new Date(endAt))}`;
+}
+
+// return hh:mm:ss - dd/MM/yy
+export function formatDateTime(value: string | Date): string {
+  const date = new Date(value);
+  const time = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  }).format(date);
+  const day = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  }).format(date);
+
+  return `${time} - ${day}`;
 }
 
 export function formatSlotSummary(

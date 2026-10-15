@@ -1,7 +1,10 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { AUTH_KEYS } from '../hooks/use-auth';
+import { showToast } from '../lib/toast';
+import { PaymentSocketProvider } from './payment-socket-provider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -12,5 +15,26 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       }),
   );
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+
+  useEffect(() => {
+    const handleInactiveAccount = () => {
+      const isVietnamese = window.location.pathname.split('/').includes('vi');
+      showToast.error(
+        isVietnamese
+          ? 'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.'
+          : 'Your account has been deactivated. Please contact an administrator.',
+      );
+      queryClient.setQueryData(AUTH_KEYS.me, null);
+      void queryClient.cancelQueries({ queryKey: AUTH_KEYS.me });
+    };
+
+    window.addEventListener('courthub:account-inactive', handleInactiveAccount);
+    return () => window.removeEventListener('courthub:account-inactive', handleInactiveAccount);
+  }, [queryClient]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <PaymentSocketProvider>{children}</PaymentSocketProvider>
+    </QueryClientProvider>
+  );
 }

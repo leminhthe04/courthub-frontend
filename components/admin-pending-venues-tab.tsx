@@ -37,7 +37,7 @@ export function AdminPendingVenuesTab({
               <div>
                 <h3 className="font-bold text-slate-900">{venue.name}</h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  {venue.sportType} · {venue.address}, {venue.city}
+                  {venue.sportType} · {venue.address}, {venue.ward}, {venue.province}
                 </p>
               </div>
               <div className="flex gap-2">

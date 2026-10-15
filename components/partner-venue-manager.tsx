@@ -8,6 +8,7 @@ import { PartnerVenueCourtsTab } from './partner-venue-courts-tab';
 import { PartnerVenueOverviewTab } from './partner-venue-overview-tab';
 import { PartnerVenuePricingTab } from './partner-venue-pricing-tab';
 import { PartnerVenueBookingsTab } from './partner-venue-bookings-tab';
+import { PartnerVenueDetailsTab } from './partner-venue-details-tab';
 
 interface PartnerVenueManagerProps {
   venueId: string;
@@ -18,9 +19,9 @@ export function PartnerVenueManager({ venueId }: PartnerVenueManagerProps) {
   const t = useTranslations('partnerDashboard');
   const tCommon = useTranslations('common');
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'courts' | 'pricing' | 'bookings'>(
-    'overview',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'courts' | 'pricing' | 'bookings' | 'details'
+  >('overview');
 
   const me = useCurrentUser();
   const isPartner = me.user?.role === 'PARTNER';
@@ -105,7 +106,7 @@ export function PartnerVenueManager({ venueId }: PartnerVenueManagerProps) {
             </div>
             <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">{venue.name}</h1>
             <p className="mt-1 text-sm text-slate-500">
-              {venue.address}, {venue.city}
+              {venue.address}, {venue.ward}, {venue.province}
             </p>
             {venue.description && (
               <p className="mt-2 max-w-3xl text-sm text-slate-600">{venue.description}</p>
@@ -185,6 +186,18 @@ export function PartnerVenueManager({ venueId }: PartnerVenueManagerProps) {
             {pricingRules.length}
           </span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('details')}
+          className={`flex items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition cursor-pointer ${
+            activeTab === 'details'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          {t('tabDetails')}
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -192,6 +205,7 @@ export function PartnerVenueManager({ venueId }: PartnerVenueManagerProps) {
       {activeTab === 'courts' && <PartnerVenueCourtsTab venue={venue} />}
       {activeTab === 'pricing' && <PartnerVenuePricingTab venue={venue} />}
       {activeTab === 'bookings' && <PartnerVenueBookingsTab venueId={venue.id} />}
+      {activeTab === 'details' && <PartnerVenueDetailsTab venue={venue} />}
     </div>
   );
 }
