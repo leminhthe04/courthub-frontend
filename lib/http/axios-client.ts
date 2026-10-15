@@ -6,6 +6,11 @@ export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? 'http://fakedomain:1111/api'
 ).replace(/\/$/, '');
 
+export const WS_BASE_URL = (process.env.NEXT_PUBLIC_WS_URL ?? new URL(API_BASE_URL).origin).replace(
+  /\/$/,
+  '',
+);
+
 interface RetriableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
@@ -19,12 +24,16 @@ export class AxiosHttpClient implements IHttpClient {
   }> = [];
 
   constructor(baseURL = API_BASE_URL) {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (baseURL.includes('.ngrok')) {
+      headers['ngrok-skip-browser-warning'] = 'true';
+    }
     this.client = axios.create({
       baseURL,
       withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       timeout: 15000,
     });
 

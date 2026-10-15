@@ -2,7 +2,7 @@ import { formatWeekday } from './formatters';
 
 export type BookingDateFilter = 'ALL' | 'TODAY' | 'THIS_WEEK' | 'THIS_MONTH' | 'CUSTOM';
 
-export type BookingWithStart = { startAt: string };
+export type BookingWithStart = { startAt: string; createdAt?: string };
 
 export type BookingGroup<T> = {
   date: string;
@@ -11,6 +11,12 @@ export type BookingGroup<T> = {
 };
 
 const VIETNAM_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+
+function newestFirst<T extends BookingWithStart>(a: T, b: T): number {
+  const aDate = a.createdAt ?? a.startAt;
+  const bDate = b.createdAt ?? b.startAt;
+  return new Date(bDate).getTime() - new Date(aDate).getTime();
+}
 
 export function todayVietnam(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: VIETNAM_TIME_ZONE }).format(new Date());
@@ -65,7 +71,7 @@ export function filterBookings<T extends BookingWithStart>(
       }).format(new Date(booking.startAt));
       return date >= range[0] && date <= range[1];
     })
-    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+    .sort(newestFirst);
 }
 
 export function groupBookingsByDate<T extends BookingWithStart>(
@@ -84,7 +90,7 @@ export function groupBookingsByDate<T extends BookingWithStart>(
   }
 
   return [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => b.localeCompare(a))
     .map(([date, items]) => ({
       date,
       label: `${formatWeekday(date, locale)} - ${new Intl.DateTimeFormat('en-GB', {
@@ -93,6 +99,6 @@ export function groupBookingsByDate<T extends BookingWithStart>(
         year: '2-digit',
         timeZone: VIETNAM_TIME_ZONE,
       }).format(dateFromKey(date))}`,
-      items,
+      items: items.sort(newestFirst),
     }));
 }

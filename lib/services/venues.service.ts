@@ -13,8 +13,7 @@ export class VenuesService implements IVenuesService {
   listPublic(filter?: VenueFilterDto, cursor?: string): Promise<VenueListResponse> {
     const params = new URLSearchParams();
     if (filter?.search) params.set('search', filter.search);
-    if (filter?.city) params.set('city', filter.city);
-    if (filter?.sportType) params.set('sportType', filter.sportType);
+    if (filter?.categoryId) params.set('categoryId', filter.categoryId);
     params.set('limit', '12');
     if (cursor) params.set('cursor', cursor);
 

@@ -122,8 +122,16 @@ export type BookingResult = {
     courtId: string;
     startAt: string;
     endAt: string;
-    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
+    status: 'PENDING' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
     totalAmount: number;
+  };
+  payment: {
+    id: string;
+    bookingId: string;
+    status: 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
+    amount: number;
+    checkoutUrl: string;
+    expiresAt: string;
   };
 };
 
@@ -136,10 +144,16 @@ export type CustomerBooking = {
   venueAddress: string;
   startAt: string;
   endAt: string;
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
+  status: 'PENDING' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED';
   totalAmount: number;
   createdAt: string;
+  paymentId: string | null;
+  paymentStatus: PaymentStatus | null;
+  paymentCheckoutUrl: string | null;
+  paymentExpiresAt: string | null;
 };
+
+export type PaymentStatus = 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
 
 export type PartnerBooking = {
   id: string;
@@ -151,6 +165,7 @@ export type PartnerBooking = {
   contactPhone: string;
   startAt: string;
   endAt: string;
+  createdAt: string;
   status: string;
   totalAmount: number;
 };
@@ -223,9 +238,7 @@ export type CreateBookingDto = {
 
 export type VenueFilterDto = {
   search?: string;
-  city?: string;
   categoryId?: string;
-  sportType?: string;
 };
 
 export type CreateVenueDto = {
