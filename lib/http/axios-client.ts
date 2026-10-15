@@ -6,25 +6,50 @@ export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? 'http://fakedomain:1111/api'
 ).replace(/\/$/, '');
 
+export const WS_BASE_URL = (process.env.NEXT_PUBLIC_WS_URL ?? new URL(API_BASE_URL).origin).replace(
+  /\/$/,
+  '',
+);
+
 interface RetriableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
+}
+
+type AuthErrorPayload = {
+  code?: string;
+  message?: string | string[];
+};
+
+const ACCOUNT_INACTIVE_EVENT = 'courthub:account-inactive';
+
+function isInactiveError(error: unknown): boolean {
+  if (error instanceof ApiError) return error.code === 'AUTH_ACCOUNT_INACTIVE';
+  if (!axios.isAxiosError(error)) return false;
+
+  const payload = error.response?.data as AuthErrorPayload | undefined;
+  return payload?.code === 'AUTH_ACCOUNT_INACTIVE';
 }
 
 export class AxiosHttpClient implements IHttpClient {
   private readonly client: AxiosInstance;
   private isRefreshing = false;
+  private hasHandledInactiveAccount = false;
   private refreshQueue: Array<{
     resolve: () => void;
     reject: (error: unknown) => void;
   }> = [];
 
   constructor(baseURL = API_BASE_URL) {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (baseURL.includes('.ngrok')) {
+      headers['ngrok-skip-browser-warning'] = 'true';
+    }
     this.client = axios.create({
       baseURL,
       withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       timeout: 15000,
     });
 
@@ -33,7 +58,18 @@ export class AxiosHttpClient implements IHttpClient {
 
   private setupInterceptors(): void {
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        const url = response.config.url ?? '';
+        if (
+          url.includes('/auth/login') ||
+          url.includes('/auth/register') ||
+          url.includes('/auth/refresh') ||
+          url.includes('/auth/me')
+        ) {
+          this.hasHandledInactiveAccount = false;
+        }
+        return response;
+      },
       async (error: AxiosError<{ message?: string | string[]; code?: string }>) => {
         const originalRequest = error.config as RetriableRequestConfig | undefined;
         const requestUrl = originalRequest?.url ?? '';
@@ -42,6 +78,11 @@ export class AxiosHttpClient implements IHttpClient {
           requestUrl.includes('/auth/register') ||
           requestUrl.includes('/auth/refresh') ||
           requestUrl.includes('/auth/me');
+
+        if (isInactiveError(error)) {
+          this.handleInactiveAccount();
+          return Promise.reject(this.formatError(error));
+        }
 
         if (
           error.response?.status === 401 &&
@@ -65,6 +106,9 @@ export class AxiosHttpClient implements IHttpClient {
             this.processQueue(null);
             return await this.client(originalRequest);
           } catch (refreshError) {
+            if (isInactiveError(refreshError)) {
+              this.handleInactiveAccount();
+            }
             this.processQueue(refreshError);
             return Promise.reject(this.formatError(refreshError as AxiosError));
           } finally {
@@ -75,6 +119,17 @@ export class AxiosHttpClient implements IHttpClient {
         return Promise.reject(this.formatError(error));
       },
     );
+  }
+
+  private handleInactiveAccount(): void {
+    if (this.hasHandledInactiveAccount) return;
+    this.hasHandledInactiveAccount = true;
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(ACCOUNT_INACTIVE_EVENT));
+    }
+
+    void this.client.post('/auth/logout').catch(() => undefined);
   }
 
   private processQueue(error: unknown): void {

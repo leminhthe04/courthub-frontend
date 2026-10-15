@@ -111,14 +111,12 @@ export function SearchableSelect({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`flex w-full items-center justify-between rounded border border-slate-200 bg-white px-4 py-2.5 text-left text-sm transition focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
+        className={`flex w-full items-center justify-between rounded border border-slate-200 bg-white px-4 py-2.5 text-left transition focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
           isOpen ? 'border-emerald-600 ring-1 ring-emerald-500' : 'hover:border-slate-300'
         }`}
       >
         <span
-          className={`block truncate ${
-            !selectedOption ? 'text-slate-400' : 'font-medium text-slate-800'
-          }`}
+          className={`block truncate ${!selectedOption ? 'text-slate-400' : ' text-slate-800'}`}
         >
           {isLoading ? loadingText : selectedOption ? selectedOption.label : placeholder}
         </span>

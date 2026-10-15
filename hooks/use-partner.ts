@@ -6,6 +6,7 @@ import type {
   CreateVenueDto,
   ScheduleResponse,
   UpdateCourtDto,
+  UpdateVenueDto,
   VenueDetail,
 } from '../lib/types';
 
@@ -96,6 +97,37 @@ export function useCreatePartnerVenue(options?: MutationCallbacks) {
     },
     onError: (err) => {
       options?.onError?.(err);
+    },
+  });
+}
+
+export function useUpdatePartnerVenue(options?: MutationCallbacks) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: { venueId: string; dto: UpdateVenueDto }) =>
+      partnerService.updateVenue(params.venueId, params.dto),
+    onMutate: async ({ venueId, dto }) => {
+      await queryClient.cancelQueries({ queryKey: PARTNER_KEYS.venues });
+      const previousVenues = queryClient.getQueryData<VenueDetail[]>(PARTNER_KEYS.venues);
+      queryClient.setQueryData<VenueDetail[]>(PARTNER_KEYS.venues, (venues) =>
+        venues?.map((venue) => (venue.id === venueId ? { ...venue, ...dto } : venue)),
+      );
+      return { previousVenues };
+    },
+    onSuccess: (updatedVenue, { venueId }) => {
+      queryClient.setQueryData<VenueDetail[]>(PARTNER_KEYS.venues, (venues) =>
+        venues?.map((venue) => (venue.id === venueId ? updatedVenue : venue)),
+      );
+      void queryClient.invalidateQueries({ queryKey: PARTNER_KEYS.venues });
+      void queryClient.invalidateQueries({ queryKey: ['schedule', venueId] });
+      options?.onSuccess?.();
+    },
+    onError: (error, _params, context) => {
+      if (context?.previousVenues) {
+        queryClient.setQueryData(PARTNER_KEYS.venues, context.previousVenues);
+      }
+      options?.onError?.(error);
     },
   });
 }

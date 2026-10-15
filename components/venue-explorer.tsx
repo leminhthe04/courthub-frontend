@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useCategories, useVenues } from '../hooks';
+import { useCategories, useDebouncedValue, useVenues } from '../hooks';
 import { Link } from '../lib/i18n/routing';
 import { MoveRight } from 'lucide-react';
 
@@ -11,9 +11,15 @@ export function VenueExplorer() {
   const tCommon = useTranslations('common');
 
   const [search, setSearch] = useState('');
-  const [city, setCity] = useState('');
-  const [sportType, setSportType] = useState('');
-  const [submitted, setSubmitted] = useState({ search: '', city: '', sportType: '' });
+  const [categoryId, setCategoryId] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 400);
+  const submitted = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+      categoryId: categoryId || undefined,
+    }),
+    [debouncedSearch, categoryId],
+  );
 
   const { data: categories } = useCategories();
   const venues = useVenues(submitted);
@@ -58,44 +64,26 @@ export function VenueExplorer() {
         </div>
       </div>
 
-      <form
-        className="relative rounded-b z-10 -mt-7 grid gap-3 border border-slate-200 bg-white p-4 shadow-lg sm:grid-cols-[1.5fr_1fr_1fr_auto]"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setSubmitted({ search, city, sportType });
-        }}
-      >
+      <div className="relative z-10 -mt-7 grid gap-3 rounded-b border border-slate-200 bg-white p-4 shadow-lg sm:grid-cols-[minmax(0,1fr)_16rem]">
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={t('searchPlaceholder')}
           className="rounded border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
         />
-        <input
-          value={city}
-          onChange={(event) => setCity(event.target.value)}
-          placeholder={t('filterCity')}
-          className="rounded border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
-        />
         <select
-          value={sportType}
-          onChange={(event) => setSportType(event.target.value)}
+          value={categoryId}
+          onChange={(event) => setCategoryId(event.target.value)}
           className="rounded border border-slate-200 bg-white px-4 py-3 outline-none focus:border-emerald-500"
         >
           <option value="">{t('allSports')}</option>
           {categories?.map((cat) => (
-            <option key={cat.id} value={cat.name}>
+            <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="cursor-pointer rounded bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700"
-        >
-          {tCommon('search')}
-        </button>
-      </form>
+      </div>
 
       <div className="mt-12 flex items-end justify-between gap-4">
         <div>
@@ -155,7 +143,7 @@ export function VenueExplorer() {
               <div className="flex flex-1 flex-col p-5">
                 <h3 className="text-xl font-bold group-hover:text-emerald-600">{venue.name}</h3>
                 <p className="mt-2 text-sm text-slate-500">
-                  {venue.address}, {venue.city}
+                  {venue.address}, {venue.ward}, {venue.province}
                 </p>
                 <p className="mt-4 line-clamp-2 text-sm leading-6 text-slate-600">
                   {venue.description ?? ''}

@@ -8,10 +8,10 @@ import {
   groupBookingsByDate,
   type BookingDateFilter as BookingDateFilterValue,
 } from '../lib/booking-filters';
-import { formatCurrency, formatTimeRange } from '../lib/formatters';
+import { formatCurrency, formatDateTime, formatTimeRange } from '../lib/formatters';
 import type { PartnerBooking } from '../lib/types';
 import { BookingDateFilter } from './booking-date-filter';
-import { ScrollableBookingList } from './scrollable-booking-list';
+import { BookingStatusBadge } from './booking-status-badge';
 
 interface PartnerVenueBookingsTabProps {
   venueId: string;
@@ -49,43 +49,42 @@ export function PartnerVenueBookingsTab({ venueId }: PartnerVenueBookingsTabProp
           {t('noVenueBookings')}
         </div>
       )}
-      <ScrollableBookingList>
-        <div className="space-y-8">
-          {groups.map((group) => (
-            <section key={group.date}>
-              <h3 className="mb-3 text-lg font-black text-slate-900">{group.label}</h3>
-              <div className="grid gap-4">
-                {group.items.map((booking: PartnerBooking) => (
-                  <article
-                    key={booking.id}
-                    className="rounded border border-slate-200 bg-white px-5 py-3 shadow-sm"
-                  >
-                    <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                      <div>
-                        <h4 className="font-bold text-slate-900">
-                          {booking.courtName} - {formatTimeRange(booking.startAt, booking.endAt)}
-                        </h4>
-                        <p className="mt-1 text-sm text-slate-600">
-                          {booking.contactName} - {booking.contactPhone} -{' '}
-                          {booking.contactEmail || '—'}
-                        </p>
-                      </div>
-                      <div className="text-left sm:text-right">
-                        <span className="rounded bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700">
-                          {booking.status}
-                        </span>
-                        <p className="mt-3 font-bold text-slate-900">
-                          {formatCurrency(booking.totalAmount, locale)}
-                        </p>
-                      </div>
+      <div className="mt-8 space-y-8">
+        {groups.map((group) => (
+          <section key={group.date}>
+            <h3 className="mb-3 text-lg font-black text-slate-900">{group.label}</h3>
+            <div className="grid gap-4">
+              {group.items.map((booking: PartnerBooking) => (
+                <article
+                  key={booking.id}
+                  className="rounded border border-slate-200 bg-white px-5 py-3 shadow-sm"
+                >
+                  <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                    <div>
+                      <h4 className="font-bold text-slate-900">
+                        {booking.courtName} - {formatTimeRange(booking.startAt, booking.endAt)}
+                      </h4>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {booking.contactName} - {booking.contactPhone} -{' '}
+                        {booking.contactEmail || '—'}
+                      </p>
+                      <p className="mt-2 text-xs text-slate-500">
+                        {t('bookedAt') + formatDateTime(booking.createdAt)}
+                      </p>
                     </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      </ScrollableBookingList>
+                    <div className="text-left sm:text-right">
+                      <BookingStatusBadge status={booking.status} translate={tCommon} />
+                      <p className="mt-3 font-bold text-slate-900">
+                        {formatCurrency(booking.totalAmount, locale)}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </section>
   );
 }
